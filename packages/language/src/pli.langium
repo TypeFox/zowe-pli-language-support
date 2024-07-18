@@ -117,13 +117,16 @@ Unit: DeclareStatement | AllocateStatement | AssertStatement | AssignmentStateme
     | SelectStatement | SignalStatement | SkipDirective | StopStatement
     | WaitStatement | WriteStatement;
 
-AllocateStatement: 'ALLOCATE' variable=AllocatedVariable ';';
+AllocateStatement: ('ALLOCATE' | 'ALLOC') variables+=AllocatedVariable (',' variables+=AllocatedVariable)* ';';
 
-AllocatedVariable: level=DECIMAL_NUM? variable=FeatureID attribute=AllocateAttribute?;
+AllocatedVariable: level=DECIMAL_NUM? name=FeatureID attribute=AllocateAttribute?;
 
 AllocateAttribute: AllocateDimension
     | AllocateType
+    | AllocateLocationReference
     | InitialAttribute;
+
+AllocateLocationReference: ('IN' '(' area=MemberCall ')' ('SET' '(' locatorVariable=MemberCall ')')? | 'SET' '(' locatorVariable=MemberCall ')');
 
 AllocateDimension: dimensions=Dimensions;
 
@@ -186,7 +189,7 @@ DefaultAttribute returns string:
     | 'MEMBER'
     | 'NATIVE' | 'NONASSIGNABLE' | 'NONCONNECTED' | 'NONNATIVE' | 'NONVARYING' | 'NORMAL'
     | 'OFFSET' | 'OPTIONAL' | 'OPTIONS' | 'OUTONLY' | 'OUTPUT'
-    | 'PARAMETER' | 'PICTURE' | 'PIC' | 'POINTER' | 'POSITION' | 'PRECISION' | 'PRINT'
+    | 'PARAMETER' | 'PICTURE' | 'PIC' | 'POINTER' | 'PTR' | 'POSITION' | 'PRECISION' | 'PRINT'
     | 'RANGE' | 'REAL' | 'RECORD' | 'RESERVED' | 'RETURNS'
     | 'SEQUENTIAL' | 'SIGNED' | 'STATIC' | 'STREAM' | 'STRUCTURE'
     | 'TASK' | 'TRANSIENT'
@@ -290,7 +293,7 @@ IfStatement: 'IF' expression=Expression 'THEN' unit=Statement ('ELSE' else=State
 
 IncludeDirective: ('%INCLUDE' | '%XINCLUDE') items+=IncludeItem (',' items+=IncludeItem)* ';';
 
-IncludeItem: file=STRING_TERM | ddname?='ddname' '(' file=STRING_TERM ')';
+IncludeItem: file=(STRING_TERM|ID) | ddname?='ddname' '(' file=(STRING_TERM|ID) ')';
 
 IterateStatement: 'ITERATE' /* TODO Reference to Label */ label=FeatureID ';';
 
@@ -335,12 +338,12 @@ FileReferenceCondition: keyword=('ENDFILE' | 'ENDPAGE'| 'KEY'|'NAME'|'RECORD'|'T
 
 OpenStatement: 'OPEN' options+=OpenOptionsGroup (',' options+=OpenOptionsGroup)* ';';
 
-OpenOptionsGroup: 
-    'FILE' '(' file=ReferenceItem ')' 
-    (stream?='STREAM' | record?='RECORD')? 
+OpenOptionsGroup:
+    'FILE' '(' file=ReferenceItem ')'
+    (stream?='STREAM' | record?='RECORD')?
     (input?='INPUT' | output?='OUTPUT' | update?='UPDATE')?
     ((sequential?='SEQUENTIAL' | direct?='DIRECT') (unbuffered?='UNBUFFERED' | buffered?='BUFFERED')?)?
-    keyed?='KEYED'? 
+    keyed?='KEYED'?
     print?='PRINT'?
     ('TITLE' '(' title=Expression ')')?
     ('LINESIZE' '(' lineSize=Expression ')')?
@@ -361,13 +364,16 @@ ProcincDirective: ('%PROCINC' | '*PROCINC') datasetName=FeatureID ';';
 
 PushDirective: {infer PushDirective} '%PUSH' ';';
 
-PutStatement: 'PUT' ((('FILE' '(' file=ReferenceItem ')')? (dataSpecification=DataSpecificationOptions)?
+PutStatement: 'PUT' 
     (
-        page?='PAGE'? ('LINE' '(' line=Expression ')')? 
-        | skip?='SKIP' ('(' skipExpression=Expression ')')?
-    ) (dataSpecification=DataSpecificationOptions)?)
-    | ('STRING' '(' stringExpression=Expression ')' dataSpecification=DataSpecificationOptions)) ';'
+        items+=PutItem* (dataSpecification=DataSpecificationOptions)?
+        | ('STRING' '(' stringExpression=Expression ')' dataSpecification=DataSpecificationOptions)
+    ) ';'
 ;
+
+PutItem: attribute=PutAttribute ('(' expression=Expression ')')?;
+
+PutAttribute returns string: 'PAGE' | 'LINE' | 'SKIP' | 'FILE';
 
 DataSpecificationOptions: (
     ('LIST'? '(' dataList=DataSpecificationDataList ')')
@@ -560,7 +566,7 @@ terminal ID: /[@#_a-zA-Z][\w_@#]*/;
 terminal BINARY_NUM: FULL_NUM /[bB][iI]?/;
 terminal WRAPPED_NUM:  ("'" (FULL_NUM | HEX_CHAR*) "'") /([xX][uU]|[xX][nN]|[bB]4|[bB]3|[bB][xX]|[bB]|[gG][xX]|[gG]|[uU][xX]|[wW][xX])[iI]?/;
 terminal fragment HEX_CHAR: /[0-9a-fA-F]/;
-terminal fragment NUM: /([0-9][0-9_]*(\.[0-9_]*)?)|(\.[0-9_]*)/;
+terminal fragment NUM: /([0-9][0-9_]*(\.[0-9_]+)?)|(\.[0-9_]+)/;
 terminal fragment FULL_NUM: NUM MANTISSA?;
 terminal fragment MANTISSA: /[ESDQ][-+]?[0-9]+/;
 terminal DECIMAL_NUM: FULL_NUM /[iI]?/;
