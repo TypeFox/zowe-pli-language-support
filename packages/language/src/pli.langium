@@ -68,7 +68,7 @@ PackageLevelStatements: DeclareStatement | DefaultStatement | ProcedureStatement
 
 ProcedureStatement: 
     (labels+=LabelPrefix)*
-    ('PROC' | 'PROCEDURE') 
+    ('PROC' | 'PROCEDURE' | xProc?='XPROC' | xProc?='XPROCEDURE') 
     ('(' (parameters+=ProcedureParameter (',' parameters+=ProcedureParameter)*)? ')')?
     (returns=FeatureID)?
     options=Options?
@@ -114,7 +114,8 @@ Unit: DeclareStatement | AllocateStatement | AssertStatement | AssignmentStateme
     | QualifyStatement
     | ReadStatement | ReinitStatement | ReleaseStatement | ResignalStatement
     | ReturnStatement | RevertStatement | RewriteStatement
-    | SelectStatement | SignalStatement | SkipDirective | StopStatement;
+    | SelectStatement | SignalStatement | SkipDirective | StopStatement
+    | WaitStatement | WriteStatement;
 
 AllocateStatement: 'ALLOCATE' variable=AllocatedVariable ';';
 
@@ -194,10 +195,10 @@ DefaultAttribute returns string:
     | 'WIDECHAR' | 'WIDEPIC'
 ;
 
-DefineAliasStatement: 'DEFINE' 'ALIAS' name=FeatureID (attributes+=DeclarationAttribute (',' attributes+=DeclarationAttribute)*)? ';';
+DefineAliasStatement: ('DEFINE' | xDefine?='XDEFINE') 'ALIAS' name=FeatureID (attributes+=DeclarationAttribute (',' attributes+=DeclarationAttribute)*)? ';';
 
 DefineOrdinalStatement:
-    'DEFINE' 'ORDINAL' name=FQN
+    ('DEFINE' | xDefine?='XDEFINE') 'ORDINAL' name=FQN
     '(' ordinalValues=OrdinalValueList ')' 
     ('PRECISION' '(' precision=DECIMAL_NUM ')')? 
     (signed?='SIGNED' | unsigned?='UNSIGNED')?
@@ -207,7 +208,7 @@ OrdinalValueList: members+=OrdinalValue (',' members+=OrdinalValue)*;
 
 OrdinalValue: name=FeatureID ('VALUE'  '(' value=DECIMAL_NUM ')')?;
 
-DefineStructureStatement: 'DEFINE' 'STRUCTURE' level=DECIMAL_NUM name=FQN (union?='UNION')? (',' substructures+=SubStructure)* ';';
+DefineStructureStatement: ('DEFINE' | xDefine?='XDEFINE') 'STRUCTURE' level=DECIMAL_NUM name=FQN (union?='UNION')? (',' substructures+=SubStructure)* ';';
 
 SubStructure: level=DECIMAL_NUM name=FeatureID (attributes+=DeclarationAttribute (',' attributes+=DeclarationAttribute)*)?;
 
@@ -287,7 +288,7 @@ GoToStatement: ('GO' 'TO' | 'GOTO') /* TODO Reference to Label */ label=FeatureI
 
 IfStatement: 'IF' expression=Expression 'THEN' unit=Statement ('ELSE' else=Statement)?;
 
-IncludeDirective: '%INCLUDE' items+=IncludeItem (',' items+=IncludeItem)* ';';
+IncludeDirective: ('%INCLUDE' | '%XINCLUDE') items+=IncludeItem (',' items+=IncludeItem)* ';';
 
 IncludeItem: file=STRING_TERM | ddname?='ddname' '(' file=STRING_TERM ')';
 
@@ -420,6 +421,10 @@ SkipDirective: '%SKIP' ('(' lines=Expression ')')? ';';
 
 StopStatement: {infer StopStatement} 'STOP' ';';
 
+WaitStatement: 'WAIT' 'THREAD' '(' task=MemberCall ')' ';';
+
+WriteStatement: 'WRITE' 'FILE' '(' fileReference=MemberCall ')' 'FROM' '(' from=MemberCall ')' ('KEYFROM' '(' keyfrom=Expression ')' | 'KEYTO' '(' keyto=MemberCall ')')? ';';
+
 // #endregion
 
 InitialAttribute: (('INITIAL' | 'INIT') (
@@ -452,7 +457,7 @@ InitialAttributeSpecificationIterationValue: '(' items+=InitialAttributeItem (',
 
 Group: {infer Group} 'GROUP';
 
-DeclareStatement: ('DCL' | 'DECLARE') items+=DeclaredItem (',' items+=DeclaredItem)*  ';';
+DeclareStatement: ('DCL' | 'DECLARE' | xDeclare?='XDECLARE' | xDeclare?='XDCL') items+=DeclaredItem (',' items+=DeclaredItem)*  ';';
 DeclaredItem: level=DECIMAL_NUM? (elements+=DeclaredVariable | elements+='*' | '(' elements+=DeclaredVariable (',' elements+=DeclaredVariable)* ')') attributes+=DeclarationAttribute*;
 
 type NamedElement = DeclaredVariable | ProcedureParameter | DoType3Variable;
