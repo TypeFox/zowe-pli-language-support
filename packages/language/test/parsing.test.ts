@@ -22,10 +22,15 @@ let parseStmts: ReturnType<typeof parseHelper<PliProgram>>;
 beforeAll(async () => {
     services = createPl1Services(EmptyFileSystem);
     parse = parseHelper<PliProgram>(services.Pl1);
+
+    /**
+     * Helper function to parse a string of PL/I statements,
+     * wrapping them in a procedure to ensure they are valid
+     */
     parseStmts = (input: string) => {
-        return parse(`MAIN: proc options(main) reorder;
+        return parse(`STARTPROC: PROCEDURE OPTIONS (MAIN);
 ${input}
-end MAIN;`);
+end STARTPROC;`);
     }
 
     // activate the following if your linking test requires elements from a built-in library, for example
