@@ -52,6 +52,16 @@ describe('PL/I Parsing tests', () => {
         expect(doc.parseResult.parserErrors).toHaveLength(0);
     });
 
+    test('Hello World Program', async () => {
+        const doc = await parse(`AVERAGE: PROCEDURE OPTIONS (MAIN);
+   /* Test characters: ^[] € */
+   /* AVERAGE_GRADE = SUM / 5; */
+   PUT LIST ('PROGRAM TO COMPUTE AVERAGE');
+ END AVERAGE;`);
+        expect(doc.parseResult.lexerErrors).toHaveLength(0);
+        expect(doc.parseResult.parserErrors).toHaveLength(0);
+    });
+
     describe('Procedures', () => {
         test('Simple procedure', async () => {
             const doc: LangiumDocument<PliProgram> = await parseStmts(`
