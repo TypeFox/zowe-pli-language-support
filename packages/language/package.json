@@ -30,8 +30,7 @@
         "build": "echo 'No build step'",
         "build:clean": "npm run clean && npm run build",
         "langium:generate": "langium generate",
-        "langium:watch": "langium generate --watch",
-        "test": "vitest run"
+        "langium:watch": "langium generate --watch"
     },
     "dependencies": {
         "langium": "~3.0.0"

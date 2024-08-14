@@ -9,3 +9,4 @@ out/
 **/syntaxes/pli.merged.json
 **/syntaxes/pli.tmLanguage.json
 *.tsbuildinfo
+*.vsix

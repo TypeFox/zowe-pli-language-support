@@ -19,13 +19,19 @@ TopLevelStatement: Package | ProcedureStatement | Directives;
 Directives: SkipDirective | PopDirective | PushDirective | LineDirective | NoteDirective | PageDirective | PrintDirective | IncludeDirective | NoPrintDirective | ProcessDirective | ProcincDirective;
 
 // Defined on p. 90
-Package: 
+Package:
+    prefix=ConditionPrefix?
     name=FeatureID ':'
+    'PACKAGE'
     exports=Exports? 
     reserves=Reserves? 
     options=Options? ';'
     statements+=PackageLevelStatements*
     end=EndStatement ';';
+
+ConditionPrefix: ('(' items+=ConditionPrefixItem ')' ':')+;
+
+ConditionPrefixItem: conditions+=Condition (',' conditions+=Condition)*;
 
 Exports:
     'EXPORTS' '(' (all?='*' | (procedures+=FeatureID (',' procedures+=FeatureID)*)) ')';
@@ -64,13 +70,13 @@ SimpleOptionsItem: value=(
     'INTER'
     );
 
-PackageLevelStatements: DeclareStatement | DefaultStatement | ProcedureStatement;
+PackageLevelStatements: DeclareStatement | DefineAliasStatement | DefineOrdinalStatement | DefineStructureStatement | DefaultStatement | ProcedureStatement;
 
 ProcedureStatement: 
     (labels+=LabelPrefix)*
     ('PROC' | 'PROCEDURE' | xProc?='XPROC' | xProc?='XPROCEDURE') 
     ('(' (parameters+=ProcedureParameter (',' parameters+=ProcedureParameter)*)? ')')?
-    (returns=FeatureID)?
+    returns=ReturnsOption?
     options=Options?
     recursive?='RECURSIVE'?
     (order=('ORDER' | 'REORDER'))?
@@ -89,7 +95,7 @@ EntryStatement:
     'ENTRY'
     ('(' (parameters+=ProcedureParameter (',' parameters+=ProcedureParameter)*)? ')')?
     ('EXTERNAL' environmentName=FeatureID)?
-    ('RETURNS' '(' returnAttributes+=FeatureID* ')')?
+    returns=ReturnsOption?
     options=Options? ';';
 
 ProcedureLevelStatement: Statement | Group | ProcedureStatement | BeginStatement;
@@ -97,7 +103,7 @@ ProcedureLevelStatement: Statement | Group | ProcedureStatement | BeginStatement
 // #region Statements
 
 Statement: 
-    (labels+=LabelPrefix)* value=Unit;
+    condition=ConditionPrefix? (labels+=LabelPrefix)* value=Unit;
 
 Unit: DeclareStatement | AllocateStatement | AssertStatement | AssignmentStatement | AttachStatement 
     | BeginStatement | CallStatement | CancelThreadStatement | CloseStatement | DefaultStatement | DefineAliasStatement | DefineOrdinalStatement | DefineStructureStatement
@@ -154,7 +160,7 @@ BeginStatement: 'BEGIN' options=Options? recursive?='RECURSIVE'? (order?='ORDER'
 
 EndStatement: (labels+=LabelPrefix)* 'END' label=FeatureID?;
 
-CallStatement: 'CALL' reference=FeatureID ('(' (arguments+=('*' | Expression) (',' arguments+=('*' | Expression))*)? ')')? ';';
+CallStatement: 'CALL' reference=MemberCall ('(' (arguments+=('*' | Expression) (',' arguments+=('*' | Expression))*)? ')')? ';';
 
 CancelThreadStatement: 'CANCEL' 'THREAD' '(' thread=MemberCall ')' ';';
 
@@ -179,22 +185,22 @@ DefaultAttribute returns string:
     | 'BACKWARDS' | 'BASED' | 'BIT' | 'BUFFERED' | 'BUILTIN' | 'BYADDR' | 'BYVALUE' | 'BIN'
     | 'CHARACTER' | 'CHAR' | 'COMPLEX' | 'CONDITION' | 'CONNECTED' | 'CONSTANT' | 'CONTROLLED'
     | 'DECIMAL' | 'DEC' | 'DEFINED' | 'DIMENSION' 
-    | 'ENTRY' | 'ENVIRONMENT' | 'ENV' | 'EVENT' | 'EXCLUSIVE' | 'EXTERNAL'
+    | 'ENTRY' | 'ENVIRONMENT' | 'ENV' | 'EVENT' | 'EXCLUSIVE' | 'EXTERNAL' | 'EXT'
     | 'FILE' | 'FIXED' | 'FLOAT' | 'FORMAT'
     | 'GENERIC' | 'GRAPHIC'
     | 'HEX' | 'HEXADEC'
-    | 'IEEE' | 'INITIAL' | 'INIT' | 'INONLY' | 'INOUT' | 'INTERNAL' | 'IRREDUCIBLE' | 'INPUT'
+    | 'IEEE' | 'INITIAL' | 'INIT' | 'INONLY' | 'INOUT' | 'INTERNAL' | 'INT' | 'IRREDUCIBLE' | 'INPUT'
     | 'KEYED'
     | 'LABEL' | 'LIST'
     | 'MEMBER'
-    | 'NATIVE' | 'NONASSIGNABLE' | 'NONCONNECTED' | 'NONNATIVE' | 'NONVARYING' | 'NORMAL'
+    | 'NATIVE' | 'NONASSIGNABLE' | 'NONASGN' | 'NONCONNECTED' | 'NONNATIVE' | 'NONVARYING' | 'NORMAL'
     | 'OFFSET' | 'OPTIONAL' | 'OPTIONS' | 'OUTONLY' | 'OUTPUT'
-    | 'PARAMETER' | 'PICTURE' | 'PIC' | 'POINTER' | 'PTR' | 'POSITION' | 'PRECISION' | 'PRINT'
+    | 'PARAMETER' | 'PICTURE' | 'PIC' | 'POINTER' | 'PTR' | 'POSITION' | 'PRECISION' | 'PREC' | 'PRINT'
     | 'RANGE' | 'REAL' | 'RECORD' | 'RESERVED' | 'RETURNS'
     | 'SEQUENTIAL' | 'SIGNED' | 'STATIC' | 'STREAM' | 'STRUCTURE'
     | 'TASK' | 'TRANSIENT'
     | 'UNAL' | 'UCHAR' | 'UNALIGNED' | 'UNBUFFERED' | 'UNION' | 'UNSIGNED' | 'UPDATE'
-    | 'VARIABLE' | 'VARYING' | 'VAR' | 'VARYING4' | 'VARYINGZ'
+    | 'VARIABLE' | 'VARYING' | 'VAR' | 'VARYING4' | 'VARYINGZ' | 'VARZ' | 'VALUE'
     | 'WIDECHAR' | 'WIDEPIC'
 ;
 
@@ -203,7 +209,7 @@ DefineAliasStatement: ('DEFINE' | xDefine?='XDEFINE') 'ALIAS' name=FeatureID (at
 DefineOrdinalStatement:
     ('DEFINE' | xDefine?='XDEFINE') 'ORDINAL' name=FQN
     '(' ordinalValues=OrdinalValueList ')' 
-    ('PRECISION' '(' precision=DECIMAL_NUM ')')? 
+    (('PRECISION' | 'PREC') '(' precision=DECIMAL_NUM ')')? 
     (signed?='SIGNED' | unsigned?='UNSIGNED')?
     ';';
 
@@ -295,9 +301,9 @@ IncludeDirective: ('%INCLUDE' | '%XINCLUDE') items+=IncludeItem (',' items+=Incl
 
 IncludeItem: file=(STRING_TERM|ID) | ddname?='ddname' '(' file=(STRING_TERM|ID) ')';
 
-IterateStatement: 'ITERATE' /* TODO Reference to Label */ label=FeatureID ';';
+IterateStatement: 'ITERATE' /* TODO Reference to Label */ label=FeatureID? ';';
 
-LeaveStatement: 'LEAVE' /* TODO Reference to Label */ label=FeatureID ';';
+LeaveStatement: 'LEAVE' /* TODO Reference to Label */ label=FeatureID? ';';
 
 LineDirective: '%LINE' ('(' line=DECIMAL_NUM ',' file=STRING_TERM ')') ';';
 
@@ -470,7 +476,7 @@ type NamedElement = DeclaredVariable | ProcedureParameter | DoType3Variable;
 
 DeclaredVariable: name=ID;
 
-DeclarationAttribute: ComputationDataAttribute | DimensionsDataAttribute | EntryAttribute;
+DeclarationAttribute: ComputationDataAttribute | DimensionsDataAttribute | EntryAttribute | LikeAttribute;
 
 DimensionsDataAttribute: dimensions=Dimensions;
 
@@ -478,11 +484,13 @@ ComputationDataAttribute: type=DataAttributeType;
 
 DataAttributeType returns string: DefaultAttribute;
 
+LikeAttribute: 'LIKE' reference=MemberCall;
+
 Dimensions: '(' (dimensions+=DimensionBound (',' dimensions+=DimensionBound)*)? ')';
 
 DimensionBound: lower=Bound (':' upper=Bound)?;
 
-Bound: (expression=(Expression | '*') | 'REFER' refer=ReferenceItem);
+Bound: (expression='*' | expression=Expression ('REFER' '(' refer=MemberCall ')')?);
 
 EntryAttribute:
     'ENTRY'
@@ -490,13 +498,15 @@ EntryAttribute:
     options=Options?
     variable?='VARIABLE'?
     limited?='LIMITED'?
-    ('RETURNS' '(' returnAttribute=DeclarationAttribute ')')?
-    ('EXTERNAL' environmentName=ID)?
+    returns=ReturnsOption?
+    ('EXTERNAL' '(' environmentName=ID ')')?
 ;
+
+ReturnsOption: 'RETURNS' '(' returnAttribute=DeclarationAttribute* ')';
 
 EntryDescription: EntryParameterDescription | EntryUnionDescription;
 
-EntryParameterDescription: value=(DeclarationAttribute | 'ALIGNED' | 'UNALIGNED' | 'ASSIGNABLE' | 'NONASSIGNABLE' | 'INOUT' | 'INONLY' | 'OUTONLY' | 'CONNECTED' | 'NONCONNECTED' | 'BYADDR' | 'BYVALUE');
+EntryParameterDescription: (attributes+=DeclarationAttribute+ | '*' option=DefaultAttribute? optional?='OPTIONAL'?);
 
 EntryUnionDescription: init=DECIMAL_NUM attributes+=DeclarationAttribute* optional?='OPTIONAL'? ',' prefixedAttributes+=PrefixedAttribute*;
 
@@ -563,17 +573,14 @@ terminal ID: /[@#_a-zA-Z][\w_@#]*/;
 /**
  * Includes both fixed and non-fixed (with and without mantissa)
  */
-terminal BINARY_NUM: FULL_NUM /[bB][iI]?/;
-terminal WRAPPED_NUM:  ("'" (FULL_NUM | HEX_CHAR*) "'") /([xX][uU]|[xX][nN]|[bB]4|[bB]3|[bB][xX]|[bB]|[gG][xX]|[gG]|[uU][xX]|[wW][xX])[iI]?/;
+terminal BINARY_NUM: FULL_NUM /([bB]|[iI])*/;
+terminal WRAPPED_NUM:  ("'" (FULL_NUM | HEX_CHAR*) "'") /([xX][uU]|[xX][nN]|[bB]4|[bB]3|[bB][xX]|[bB]|[gG][xX]|[gG]|[uU][xX]|[wW][xX]|[xX]|[iI])*/;
 terminal fragment HEX_CHAR: /[0-9a-fA-F]/;
 terminal fragment NUM: /([0-9][0-9_]*(\.[0-9_]+)?)|(\.[0-9_]+)/;
 terminal fragment FULL_NUM: NUM MANTISSA?;
 terminal fragment MANTISSA: /[ESDQ][-+]?[0-9]+/;
 terminal DECIMAL_NUM: FULL_NUM /[iI]?/;
-terminal STRING_TERM: /("(\\.|[^"\\])*"|'(\\.|[^'\\])*')([xX][aA][eE])?/;
+terminal STRING_TERM: /("(""|\\.|[^"\\])*"|'(''|\\.|[^'\\])*')([xX]|[aA]|[eE])*/;
 
-/**
- * PL1 only features a single token for comments that can span multiple lines.
- * This is the same comment type used in other common C like languages.
- */
-hidden terminal COMMENT: /\/\*[\s\S]*?\*\//;
+hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
+hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;

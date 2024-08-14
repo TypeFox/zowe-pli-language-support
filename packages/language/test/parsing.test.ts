@@ -413,7 +413,6 @@ dcl cmonth char(3) // must be one of the 12 months listed
 
         test('Package with main routine', async () => {
             const doc: LangiumDocument<PliProgram> = await parseStmts(`
-*Process S A(F)  LIMITS(EXTNAME(31)) NUMBER;
  Package_Demo: Package exports (T);
  T: PROCEDURE OPTIONS (MAIN);
  END T;

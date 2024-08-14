@@ -12,7 +12,7 @@
         "lint": "eslint src --ext ts",
         "langium:generate": "npm run --workspace packages/language langium:generate",
         "langium:watch": "npm run --workspace packages/language langium:watch",
-        "test": "npm run --workspace packages/language test"
+        "test": "vitest"
     },
     "devDependencies": {
         "@types/node": "^18.0.0",
