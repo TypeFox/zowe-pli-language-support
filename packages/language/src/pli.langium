@@ -137,7 +137,7 @@ AllocateAttribute: AllocateDimension
     | AllocateLocationReference
     | InitialAttribute;
 
-AllocateLocationReference: ('IN' '(' area=MemberCall ')' ('SET' '(' locatorVariable=MemberCall ')')? | 'SET' '(' locatorVariable=MemberCall ')');
+AllocateLocationReference: ('IN' '(' area=LocatorCall ')' ('SET' '(' locatorVariable=LocatorCall ')')? | 'SET' '(' locatorVariable=LocatorCall ')');
 
 AllocateDimension: dimensions=Dimensions;
 
@@ -153,11 +153,11 @@ AssertStatement: 'ASSERT' (
     )
     ('TEXT' displayExpression=Expression)?;
 
-AssignmentStatement: refs+=MemberCall (',' refs+=MemberCall)* operator=AssignmentOperator expression=Expression (',' 'BY' ('NAME' | 'DIMACROSS' dimacrossExpr=Expression))? ';';
+AssignmentStatement: refs+=LocatorCall (',' refs+=LocatorCall)* operator=AssignmentOperator expression=Expression (',' 'BY' ('NAME' | 'DIMACROSS' dimacrossExpr=Expression))? ';';
 
 AssignmentOperator returns string: '=' | '+=' | '-=' | '*=' | '/=' | '|=' | '&=' | '||=' | '**=' | '¬=' | '^=' | '<>';
 
-AttachStatement: 'ATTACH' reference=MemberCall ('THREAD' '(' task=MemberCall ')') (environment?='ENVIRONMENT' '(' ('TSTACK' '(' tstack=Expression ')')? ')')? ';';
+AttachStatement: 'ATTACH' reference=LocatorCall ('THREAD' '(' task=LocatorCall ')') (environment?='ENVIRONMENT' '(' ('TSTACK' '(' tstack=Expression ')')? ')')? ';';
 
 BeginStatement: 'BEGIN' options=Options? recursive?='RECURSIVE'? (order?='ORDER' | reorder?='REORDER')? ';'
     statements+=Statement*
@@ -165,9 +165,9 @@ BeginStatement: 'BEGIN' options=Options? recursive?='RECURSIVE'? (order?='ORDER'
 
 EndStatement: (labels+=LabelPrefix)* 'END' label=FeatureID?;
 
-CallStatement: 'CALL' reference=MemberCall ('(' (arguments+=('*' | Expression) (',' arguments+=('*' | Expression))*)? ')')? ';';
+CallStatement: 'CALL' reference=LocatorCall ('(' (arguments+=('*' | Expression) (',' arguments+=('*' | Expression))*)? ')')? ';';
 
-CancelThreadStatement: 'CANCEL' 'THREAD' '(' thread=MemberCall ')' ';';
+CancelThreadStatement: 'CANCEL' 'THREAD' '(' thread=LocatorCall ')' ';';
 
 CloseStatement: 'CLOSE' 'FILE' '(' (file=MemberCall | star?='*') ')' ';';
 
@@ -228,12 +228,12 @@ SubStructure: level=NUMBER name=FeatureID (attributes+=DeclarationAttribute (','
 
 DelayStatement: 'DELAY' '(' delay=Expression ')' ';';
 
-DeleteStatement: 'DELETE' 'FILE' '(' (file=MemberCall) ')' ('KEY' '(' key=Expression ')')? ';';
+DeleteStatement: 'DELETE' 'FILE' '(' (file=LocatorCall) ')' ('KEY' '(' key=Expression ')')? ';';
 
-DetachStatement: 'DETACH' 'THREAD' '(' reference=MemberCall ')' ';';
+DetachStatement: 'DETACH' 'THREAD' '(' reference=LocatorCall ')' ';';
 
 DisplayStatement: 'DISPLAY' '(' expression=Expression ')' 
-    ('REPLY' '(' reply=MemberCall ')')? 
+    ('REPLY' '(' reply=LocatorCall ')')? 
     ('ROUTCDE' '(' rout+=NUMBER (',' rout+=NUMBER)* ')' ('DESC' '(' desc+=NUMBER (',' desc+=NUMBER)* ')')?)? ';'
 ;
 
@@ -269,9 +269,9 @@ ExitStatement: {infer ExitStatement} 'EXIT' ';';
 
 FetchStatement: 'FETCH' entries+=FetchEntry (',' entries+=FetchEntry)* ';';
 
-FetchEntry: name=FeatureID ('SET' '(' set=MemberCall ')')? ('TITLE' '(' title=Expression ')')?;
+FetchEntry: name=FeatureID ('SET' '(' set=LocatorCall ')')? ('TITLE' '(' title=Expression ')')?;
 
-FlushStatement: 'FLUSH' 'FILE' '(' file=(MemberCall | '*') ')' ';';
+FlushStatement: 'FLUSH' 'FILE' '(' file=(LocatorCall | '*') ')' ';';
 
 FormatStatement: 'FORMAT' '(' list=FormatList ')' ';';
 
@@ -313,7 +313,7 @@ VFormatItem: {infer VFormatItem} 'V';
 
 XFormatItem: 'X' '(' width=Expression ')';
 
-FreeStatement: 'FREE' references+=MemberCall (',' references+=MemberCall)* ';';
+FreeStatement: 'FREE' references+=LocatorCall (',' references+=LocatorCall)* ';';
 
 GetStatement: 'GET'
     ('FILE' '(' file=Expression ')')?
@@ -337,9 +337,9 @@ LeaveStatement: 'LEAVE' /* TODO Reference to Label */ label=FeatureID? ';';
 LineDirective: '%LINE' ('(' line=NUMBER ',' file=STRING_TERM ')') ';';
 
 LocateStatement: 
-    'LOCATE' variable=MemberCall 
+    'LOCATE' variable=LocatorCall 
     'FILE' '(' file=ReferenceItem ')' 
-    ('SET' '(' set=MemberCall /* TODO Pointer-Reference? */ ')')? 
+    ('SET' '(' set=LocatorCall /* TODO Pointer-Reference? */ ')')? 
     ('KEYFROM' '(' keyfrom=Expression ')')?
     ';'
 ;
@@ -426,14 +426,14 @@ DataSpecificationFormatList: DataSpecificationDataListItem;
 
 QualifyStatement: {infer QualifyStatement} 'QUALIFY' ';';
 
-ReadStatement: 'READ' 'FILE' '(' fileReference=MemberCall ')' 
+ReadStatement: 'READ' 'FILE' '(' fileReference=LocatorCall ')' 
     (
         'IGNORE' '(' ignore=Expression ')' 
-        | ('INTO' '(' intoRef=MemberCall ')' | 'SET' '(' set=MemberCall ')') ('KEY' '(' key=Expression ')' | 'KEYTO' '(' keyto=MemberCall ')')?
+        | ('INTO' '(' intoRef=LocatorCall ')' | 'SET' '(' set=LocatorCall ')') ('KEY' '(' key=Expression ')' | 'KEYTO' '(' keyto=LocatorCall ')')?
     )? ';'
 ;
 
-ReinitStatement: 'REINIT' reference=MemberCall ';';
+ReinitStatement: 'REINIT' reference=LocatorCall ';';
 
 ReleaseStatement: 'RELEASE' (star?='*' | references+=FeatureID (',' references+=FeatureID)*) ';';
 
@@ -443,7 +443,7 @@ ReturnStatement: 'RETURN' ('(' expression=Expression ')')? ';';
 
 RevertStatement: 'REVER' conditions+=Condition (',' conditions+=Condition)* ';';
 
-RewriteStatement: 'REWRITE' 'FILE' '(' file=MemberCall ')' ('FROM' '(' from=MemberCall ')')? ('KEY' '(' key=Expression ')')? ';';
+RewriteStatement: 'REWRITE' 'FILE' '(' file=LocatorCall ')' ('FROM' '(' from=LocatorCall ')')? ('KEY' '(' key=Expression ')')? ';';
 
 // Ensure via validation that `Otherwise` appears last
 SelectStatement: 
@@ -462,9 +462,9 @@ SkipDirective: '%SKIP' ('(' lines=Expression ')')? ';';
 
 StopStatement: {infer StopStatement} 'STOP' ';';
 
-WaitStatement: 'WAIT' 'THREAD' '(' task=MemberCall ')' ';';
+WaitStatement: 'WAIT' 'THREAD' '(' task=LocatorCall ')' ';';
 
-WriteStatement: 'WRITE' 'FILE' '(' fileReference=MemberCall ')' 'FROM' '(' from=MemberCall ')' ('KEYFROM' '(' keyfrom=Expression ')' | 'KEYTO' '(' keyto=MemberCall ')')? ';';
+WriteStatement: 'WRITE' 'FILE' '(' fileReference=LocatorCall ')' 'FROM' '(' from=LocatorCall ')' ('KEYFROM' '(' keyfrom=Expression ')' | 'KEYTO' '(' keyto=LocatorCall ')')? ';';
 
 // #endregion
 
@@ -520,19 +520,19 @@ ValueAttribute: 'VALUE' '(' value=Expression ')';
 
 ValueListAttribute: 'VALUELIST' '(' (values+=Expression (',' values+=Expression)*)? ')';
 
-ValueListFromAttribute: 'VALUELISTFROM' from=MemberCall;
+ValueListFromAttribute: 'VALUELISTFROM' from=LocatorCall;
 
 ValueRangeAttribute: 'VALUERANGE' '(' (values+=Expression (',' values+=Expression)*)? ')';
 
 DataAttributeType returns string: DefaultAttribute;
 
-LikeAttribute: 'LIKE' reference=MemberCall;
+LikeAttribute: 'LIKE' reference=LocatorCall;
 
 Dimensions: '(' (dimensions+=DimensionBound (',' dimensions+=DimensionBound)*)? ')';
 
 DimensionBound: lower=Bound (':' upper=Bound)?;
 
-Bound: (expression='*' | expression=Expression ('REFER' '(' refer=MemberCall ')')?);
+Bound: (expression='*' | expression=Expression ('REFER' '(' refer=LocatorCall ')')?);
 
 // ONLY FOR FILES
 EnvironmentAttribute: ('ENVIRONMENT' | 'ENV') '(' items+=EnvironmentAttributeItem* ')';
@@ -542,11 +542,14 @@ EnvironmentAttributeItem: ref=ID ('(' (args+=Expression (','? args+=Expression)*
 EntryAttribute:
     'ENTRY'
     ('(' attributes+=EntryDescription (',' attributes+=EntryDescription)* ')')?
-    // options=Options?
-    // variable?='VARIABLE'?
-    // limited?='LIMITED'?
-    // returns=ReturnsOption?
-    // ('EXTERNAL' '(' environmentName=ID ')')?
+    (
+        options+=Options |
+        variable+='VARIABLE' |
+        limited+='LIMITED' |
+        returns+=ReturnsOption |
+        ('EXTERNAL' '(' environmentName+=ID ')')
+    )*
+    
 ;
 
 ReturnsOption: 'RETURNS' '(' returnAttribute=DeclarationAttribute* ')';
@@ -590,10 +593,10 @@ MultExpression infers Expression: ExpExpression ({infer MultExpression.left=curr
 ExpExpression infers Expression: PrimaryExpression ({infer ExpExpression.left=current} op='**' right=PrimaryExpression)*;
 
 PrimaryExpression infers Expression: 
-    ConstantExpression
+    Literal
     | '(' Expression ')'
     | UnaryExpression
-    | MemberCall;
+    | LocatorCall;
 
 MemberCall:
     element=ReferenceItem
@@ -601,14 +604,17 @@ MemberCall:
         "." element=ReferenceItem
     )*;
 
+LocatorCall:
+    element=MemberCall
+    ({infer LocatorCall.previous=current}
+        (pointer?="->" | handle?="=>") element=MemberCall
+    )*;
+
 UnaryExpression: op=('+' | '-' | '¬' | '^') expr=Expression;
 
 ConstantExpression: Literal;
 
-Literal: StringLiteral | NumberLiteral;
-
-StringLiteral: ('(' multiplier=NUMBER ')')? value=STRING_TERM;
-NumberLiteral: (negative?='-' | '+')? value=(NUMBER | WRAPPED_NUM);
+Literal: ('(' multiplier=NUMBER ')')? value=(STRING_TERM | NUMBER | WRAPPED_NUM);
 
 FQN returns string: ID ('.' ID)*;
 FeatureID returns string: ID;
