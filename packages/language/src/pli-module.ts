@@ -18,6 +18,7 @@ import { getPliGrammar } from './parser/pli-grammar.js';
 import { PliTokenBuilder } from './parser/pli-token-builder.js';
 import { PliScopeComputation } from './references/pli-scope-computation.js';
 import { PliDocumentValidator } from './validation/pli-document-validator.js';
+import { PliSemanticTokenProvider } from './lsp/pli-semantic-highlighting.js';
 
 /**
  * Declaration of custom services - add your own service classes here.
@@ -51,6 +52,9 @@ export const Pl1Module: Module<Pl1Services, PartialLangiumServices & Pl1AddedSer
     },
     references: {
         ScopeComputation: services => new PliScopeComputation(services)
+    },
+    lsp: {
+        SemanticTokenProvider: services => new PliSemanticTokenProvider(services)
     }
 };
 

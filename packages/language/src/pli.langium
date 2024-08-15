@@ -72,16 +72,19 @@ SimpleOptionsItem: value=(
 
 PackageLevelStatements: DeclareStatement | DefineAliasStatement | DefineOrdinalStatement | DefineStructureStatement | DefaultStatement | ProcedureStatement;
 
-ProcedureStatement: 
+ProcedureStatement:
     (labels+=LabelPrefix)*
     ('PROC' | 'PROCEDURE' | xProc?='XPROC' | xProc?='XPROCEDURE') 
     ('(' (parameters+=ProcedureParameter (',' parameters+=ProcedureParameter)*)? ')')?
-    returns=ReturnsOption?
-    options=Options?
-    recursive?='RECURSIVE'?
-    (order=('ORDER' | 'REORDER'))?
-    ('EXTERNAL' environmentName=FeatureID)?
-    scope=ScopeAttribute? ';'
+    // These can appear in any order:
+    (
+        returns+=ReturnsOption |
+        options+=Options |
+        recursive+='RECURSIVE' |
+        (order+=('ORDER' | 'REORDER')) |
+        ('EXTERNAL' environmentName+=FeatureID) |
+        scope+=ScopeAttribute
+    )* ';'
     statements+=ProcedureLevelStatement*
     ('PROC' | 'PROCEDURE')? end=EndStatement ';';
 
@@ -94,9 +97,11 @@ EntryStatement:
     (labels+=LabelPrefix)*
     'ENTRY'
     ('(' (parameters+=ProcedureParameter (',' parameters+=ProcedureParameter)*)? ')')?
-    ('EXTERNAL' environmentName=FeatureID)?
-    returns=ReturnsOption?
-    options=Options? ';';
+    (('EXTERNAL' environmentName+=FeatureID?) |
+    variable+='VARIABLE' |
+    limited+='LIMITED' |
+    returns+=ReturnsOption |
+    options+=Options)* ';';
 
 ProcedureLevelStatement: Statement | Group | ProcedureStatement | BeginStatement;
 
@@ -125,7 +130,7 @@ Unit: DeclareStatement | AllocateStatement | AssertStatement | AssignmentStateme
 
 AllocateStatement: ('ALLOCATE' | 'ALLOC') variables+=AllocatedVariable (',' variables+=AllocatedVariable)* ';';
 
-AllocatedVariable: level=DECIMAL_NUM? name=FeatureID attribute=AllocateAttribute?;
+AllocatedVariable: level=NUMBER? name=FeatureID attribute=AllocateAttribute?;
 
 AllocateAttribute: AllocateDimension
     | AllocateType
@@ -182,10 +187,10 @@ DefaultAttributeExpressionNot: (not?='NOT')? value=DefaultAttribute;
 
 DefaultAttribute returns string:
     'ABNORMAL' | 'ALIGNED' | 'AREA' | 'ASSIGNABLE' | 'AUTOMATIC' 
-    | 'BACKWARDS' | 'BASED' | 'BIT' | 'BUFFERED' | 'BUILTIN' | 'BYADDR' | 'BYVALUE' | 'BIN'
+    | 'BACKWARDS' | 'BASED' | 'BIT' | 'BUFFERED' | 'BUILTIN' | 'BYADDR' | 'BYVALUE' | 'BIN' | 'BINARY'
     | 'CHARACTER' | 'CHAR' | 'COMPLEX' | 'CONDITION' | 'CONNECTED' | 'CONSTANT' | 'CONTROLLED'
     | 'DECIMAL' | 'DEC' | 'DEFINED' | 'DIMENSION' 
-    | 'ENTRY' | 'ENVIRONMENT' | 'ENV' | 'EVENT' | 'EXCLUSIVE' | 'EXTERNAL' | 'EXT'
+    | 'EVENT' | 'EXCLUSIVE' | 'EXTERNAL' | 'EXT'
     | 'FILE' | 'FIXED' | 'FLOAT' | 'FORMAT'
     | 'GENERIC' | 'GRAPHIC'
     | 'HEX' | 'HEXADEC'
@@ -195,31 +200,31 @@ DefaultAttribute returns string:
     | 'MEMBER'
     | 'NATIVE' | 'NONASSIGNABLE' | 'NONASGN' | 'NONCONNECTED' | 'NONNATIVE' | 'NONVARYING' | 'NORMAL'
     | 'OFFSET' | 'OPTIONAL' | 'OPTIONS' | 'OUTONLY' | 'OUTPUT'
-    | 'PARAMETER' | 'PICTURE' | 'PIC' | 'POINTER' | 'PTR' | 'POSITION' | 'PRECISION' | 'PREC' | 'PRINT'
+    | 'PARAMETER' | 'POINTER' | 'PTR' | 'POSITION' | 'PRECISION' | 'PREC' | 'PRINT'
     | 'RANGE' | 'REAL' | 'RECORD' | 'RESERVED' | 'RETURNS'
     | 'SEQUENTIAL' | 'SIGNED' | 'STATIC' | 'STREAM' | 'STRUCTURE'
     | 'TASK' | 'TRANSIENT'
     | 'UNAL' | 'UCHAR' | 'UNALIGNED' | 'UNBUFFERED' | 'UNION' | 'UNSIGNED' | 'UPDATE'
-    | 'VARIABLE' | 'VARYING' | 'VAR' | 'VARYING4' | 'VARYINGZ' | 'VARZ' | 'VALUE'
+    | 'VARIABLE' | 'VARYING' | 'VAR' | 'VARYING4' | 'VARYINGZ' | 'VARZ'
     | 'WIDECHAR' | 'WIDEPIC'
 ;
 
-DefineAliasStatement: ('DEFINE' | xDefine?='XDEFINE') 'ALIAS' name=FeatureID (attributes+=DeclarationAttribute (',' attributes+=DeclarationAttribute)*)? ';';
+DefineAliasStatement: ('DEFINE' | xDefine?='XDEFINE') 'ALIAS' name=FeatureID (attributes+=DeclarationAttribute (','? attributes+=DeclarationAttribute)*)? ';';
 
 DefineOrdinalStatement:
     ('DEFINE' | xDefine?='XDEFINE') 'ORDINAL' name=FQN
     '(' ordinalValues=OrdinalValueList ')' 
-    (('PRECISION' | 'PREC') '(' precision=DECIMAL_NUM ')')? 
+    (('PRECISION' | 'PREC') '(' precision=NUMBER ')')? 
     (signed?='SIGNED' | unsigned?='UNSIGNED')?
     ';';
 
 OrdinalValueList: members+=OrdinalValue (',' members+=OrdinalValue)*;
 
-OrdinalValue: name=FeatureID ('VALUE'  '(' value=DECIMAL_NUM ')')?;
+OrdinalValue: name=FeatureID ('VALUE'  '(' value=NUMBER ')')?;
 
-DefineStructureStatement: ('DEFINE' | xDefine?='XDEFINE') 'STRUCTURE' level=DECIMAL_NUM name=FQN (union?='UNION')? (',' substructures+=SubStructure)* ';';
+DefineStructureStatement: ('DEFINE' | xDefine?='XDEFINE') 'STRUCTURE' level=NUMBER name=FQN (union?='UNION')? (',' substructures+=SubStructure)* ';';
 
-SubStructure: level=DECIMAL_NUM name=FeatureID (attributes+=DeclarationAttribute (',' attributes+=DeclarationAttribute)*)?;
+SubStructure: level=NUMBER name=FeatureID (attributes+=DeclarationAttribute (',' attributes+=DeclarationAttribute)*)?;
 
 DelayStatement: 'DELAY' '(' delay=Expression ')' ';';
 
@@ -229,7 +234,7 @@ DetachStatement: 'DETACH' 'THREAD' '(' reference=MemberCall ')' ';';
 
 DisplayStatement: 'DISPLAY' '(' expression=Expression ')' 
     ('REPLY' '(' reply=MemberCall ')')? 
-    ('ROUTCDE' '(' rout+=DECIMAL_NUM (',' rout+=DECIMAL_NUM)* ')' ('DESC' '(' desc+=DECIMAL_NUM (',' desc+=DECIMAL_NUM)* ')')?)? ';'
+    ('ROUTCDE' '(' rout+=NUMBER (',' rout+=NUMBER)* ')' ('DESC' '(' desc+=NUMBER (',' desc+=NUMBER)* ')')?)? ';'
 ;
 
 DoStatement:
@@ -272,9 +277,33 @@ FormatStatement: 'FORMAT' '(' list=FormatList ')' ';';
 
 FormatList: items+=FormatListItem (',' items+=FormatListItem)*;
 
-FormatListItem: level=Expression? (item=FormatItem | '(' list=FormatList ')');
+FormatListItem: level=FormatListItemLevel? (item=FormatItem | '(' list=FormatList ')');
 
-FormatItem: RFormatItem | SkipFormatItem | VFormatItem | XFormatItem;
+FormatListItemLevel: level=NUMBER | '(' level=Expression ')';
+
+FormatItem: AFormatItem | BFormatItem | CFormatItem | EFormatItem | FFormatItem | PFormatItem
+    | ColumnFormatItem | GFormatItem | LFormatItem | LineFormatItem | PageFormatItem
+    | RFormatItem | SkipFormatItem | VFormatItem | XFormatItem;
+
+AFormatItem: 'A' '(' fieldWidth=Expression ')';
+
+BFormatItem: 'B' '(' fieldWidth=Expression ')';
+
+CFormatItem: 'C' '(' item=(FFormatItem | EFormatItem | PFormatItem)')';
+
+FFormatItem: 'F' '(' fieldWidth=Expression (',' fractionalDigits=Expression (',' scalingFactor=Expression)?)? ')';
+EFormatItem: 'E' '(' fieldWidth=Expression ',' fractionalDigits=Expression (',' significantDigits=Expression)? ')';
+PFormatItem: 'P' specification=STRING_TERM;
+
+ColumnFormatItem: 'COLUMN' '(' characterPosition=Expression ')';
+
+GFormatItem: 'G' '(' fieldWidth=Expression ')';
+
+LFormatItem: {infer LFormatItem} 'L';
+
+LineFormatItem: 'LINE' '(' lineNumber=Expression ')';
+
+PageFormatItem: {infer PageFormatItem} 'PAGE';
 
 RFormatItem: 'R' '(' labelReference=FeatureID ')';
 
@@ -305,7 +334,7 @@ IterateStatement: 'ITERATE' /* TODO Reference to Label */ label=FeatureID? ';';
 
 LeaveStatement: 'LEAVE' /* TODO Reference to Label */ label=FeatureID? ';';
 
-LineDirective: '%LINE' ('(' line=DECIMAL_NUM ',' file=STRING_TERM ')') ';';
+LineDirective: '%LINE' ('(' line=NUMBER ',' file=STRING_TERM ')') ';';
 
 LocateStatement: 
     'LOCATE' variable=MemberCall 
@@ -470,17 +499,30 @@ InitialAttributeSpecificationIterationValue: '(' items+=InitialAttributeItem (',
 Group: {infer Group} 'GROUP';
 
 DeclareStatement: ('DCL' | 'DECLARE' | xDeclare?='XDECLARE' | xDeclare?='XDCL') items+=DeclaredItem (',' items+=DeclaredItem)*  ';';
-DeclaredItem: level=DECIMAL_NUM? (elements+=DeclaredVariable | elements+='*' | '(' elements+=DeclaredVariable (',' elements+=DeclaredVariable)* ')') attributes+=DeclarationAttribute*;
+DeclaredItem: level=NUMBER? (elements+=DeclaredVariable | elements+='*' | '(' elements+=DeclaredVariable (',' elements+=DeclaredVariable)* ')') attributes+=DeclarationAttribute*;
 
 type NamedElement = DeclaredVariable | ProcedureParameter | DoType3Variable;
+type NamedType = DefineAliasStatement;
 
 DeclaredVariable: name=ID;
 
-DeclarationAttribute: ComputationDataAttribute | DimensionsDataAttribute | EntryAttribute | LikeAttribute;
+DeclarationAttribute: PictureAttribute | EnvironmentAttribute | DimensionsDataAttribute | ValueAttribute | ValueListFromAttribute | ValueListAttribute | ValueRangeAttribute | ComputationDataAttribute | EntryAttribute | LikeAttribute | TypeAttribute;
 
-DimensionsDataAttribute: dimensions=Dimensions;
+PictureAttribute: ('PICTURE' | 'WIDEPIC' | 'PIC') picture=STRING_TERM;
 
-ComputationDataAttribute: type=DataAttributeType;
+DimensionsDataAttribute: ('DIMENSION' | 'DIM')? dimensions=Dimensions;
+
+TypeAttribute: 'TYPE' type=[NamedType:ID];
+
+ComputationDataAttribute: type=DataAttributeType dimensions=Dimensions?;
+
+ValueAttribute: 'VALUE' '(' value=Expression ')';
+
+ValueListAttribute: 'VALUELIST' '(' (values+=Expression (',' values+=Expression)*)? ')';
+
+ValueListFromAttribute: 'VALUELISTFROM' from=MemberCall;
+
+ValueRangeAttribute: 'VALUERANGE' '(' (values+=Expression (',' values+=Expression)*)? ')';
 
 DataAttributeType returns string: DefaultAttribute;
 
@@ -492,14 +534,19 @@ DimensionBound: lower=Bound (':' upper=Bound)?;
 
 Bound: (expression='*' | expression=Expression ('REFER' '(' refer=MemberCall ')')?);
 
+// ONLY FOR FILES
+EnvironmentAttribute: ('ENVIRONMENT' | 'ENV') '(' items+=EnvironmentAttributeItem* ')';
+
+EnvironmentAttributeItem: ref=ID ('(' (args+=Expression (','? args+=Expression)*)? ')')?;
+
 EntryAttribute:
     'ENTRY'
     ('(' attributes+=EntryDescription (',' attributes+=EntryDescription)* ')')?
-    options=Options?
-    variable?='VARIABLE'?
-    limited?='LIMITED'?
-    returns=ReturnsOption?
-    ('EXTERNAL' '(' environmentName=ID ')')?
+    // options=Options?
+    // variable?='VARIABLE'?
+    // limited?='LIMITED'?
+    // returns=ReturnsOption?
+    // ('EXTERNAL' '(' environmentName=ID ')')?
 ;
 
 ReturnsOption: 'RETURNS' '(' returnAttribute=DeclarationAttribute* ')';
@@ -508,9 +555,9 @@ EntryDescription: EntryParameterDescription | EntryUnionDescription;
 
 EntryParameterDescription: (attributes+=DeclarationAttribute+ | '*' option=DefaultAttribute? optional?='OPTIONAL'?);
 
-EntryUnionDescription: init=DECIMAL_NUM attributes+=DeclarationAttribute* optional?='OPTIONAL'? ',' prefixedAttributes+=PrefixedAttribute*;
+EntryUnionDescription: init=NUMBER attributes+=DeclarationAttribute* optional?='OPTIONAL'? ',' prefixedAttributes+=PrefixedAttribute*;
 
-PrefixedAttribute: level=DECIMAL_NUM attribute=DeclarationAttribute?;
+PrefixedAttribute: level=NUMBER attribute=DeclarationAttribute?;
 
 ProcedureParameter: name=FeatureID;
 
@@ -543,9 +590,9 @@ MultExpression infers Expression: ExpExpression ({infer MultExpression.left=curr
 ExpExpression infers Expression: PrimaryExpression ({infer ExpExpression.left=current} op='**' right=PrimaryExpression)*;
 
 PrimaryExpression infers Expression: 
-    '(' Expression ')'
+    ConstantExpression
+    | '(' Expression ')'
     | UnaryExpression
-    | ConstantExpression
     | MemberCall;
 
 MemberCall:
@@ -558,28 +605,26 @@ UnaryExpression: op=('+' | '-' | '¬' | '^') expr=Expression;
 
 ConstantExpression: Literal;
 
-Literal: StringLiteral | BinaryLiteral | DecimalLiteral;
+Literal: StringLiteral | NumberLiteral;
 
-StringLiteral: ('(' multiplier=DECIMAL_NUM ')')? value=STRING_TERM;
-BinaryLiteral: (negative?='-' | '+')? value=(BINARY_NUM | WRAPPED_NUM);
-DecimalLiteral: (negative?='-' | '+')? value=DECIMAL_NUM;
+StringLiteral: ('(' multiplier=NUMBER ')')? value=STRING_TERM;
+NumberLiteral: (negative?='-' | '+')? value=(NUMBER | WRAPPED_NUM);
 
 FQN returns string: ID ('.' ID)*;
 FeatureID returns string: ID;
 
 hidden terminal WS: /\s+/;
-terminal ExecFragment: /(?<=[eE][xX][eE][cC]\s+)[a-zA-Z]+\s[^;]*/;
+terminal ExecFragment: /(?<=EXEC\s*)[a-zA-Z]+\s[^;]*/i;
 terminal ID: /[@#_a-zA-Z][\w_@#]*/;
 /**
  * Includes both fixed and non-fixed (with and without mantissa)
  */
-terminal BINARY_NUM: FULL_NUM /([bB]|[iI])*/;
+terminal NUMBER: FULL_NUM /([bB]|[iI])*/;
 terminal WRAPPED_NUM:  ("'" (FULL_NUM | HEX_CHAR*) "'") /([xX][uU]|[xX][nN]|[bB]4|[bB]3|[bB][xX]|[bB]|[gG][xX]|[gG]|[uU][xX]|[wW][xX]|[xX]|[iI])*/;
 terminal fragment HEX_CHAR: /[0-9a-fA-F]/;
 terminal fragment NUM: /([0-9][0-9_]*(\.[0-9_]+)?)|(\.[0-9_]+)/;
 terminal fragment FULL_NUM: NUM MANTISSA?;
 terminal fragment MANTISSA: /[ESDQ][-+]?[0-9]+/;
-terminal DECIMAL_NUM: FULL_NUM /[iI]?/;
 terminal STRING_TERM: /("(""|\\.|[^"\\])*"|'(''|\\.|[^'\\])*')([xX]|[aA]|[eE])*/;
 
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;

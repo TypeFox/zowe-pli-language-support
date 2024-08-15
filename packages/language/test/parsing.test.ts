@@ -39,11 +39,12 @@ ${input}
 
 describe('PL/I Parsing tests', () => {
 
-    test.fails('empty program', async () => {
-        const doc: LangiumDocument<PliProgram> = await parse(``);
-        expect(doc.parseResult.lexerErrors).toHaveLength(0);
-        expect(doc.parseResult.parserErrors).toHaveLength(0);
-    });
+    // // Handle as validation error
+    // test.fails('empty program', async () => {
+    //     const doc: LangiumDocument<PliProgram> = await parse(``);
+    //     expect(doc.parseResult.lexerErrors).toHaveLength(0);
+    //     expect(doc.parseResult.parserErrors).toHaveLength(0);
+    // });
 
     test('empty program w/ null statement', async () => {
         const doc: LangiumDocument<PliProgram> = await parseStmts(`;`);
@@ -262,16 +263,17 @@ describe('PL/I Parsing tests', () => {
             expect(doc.parseResult.parserErrors).toHaveLength(0);
         });
 
-        test.fails('fails with duplicate value in value list', async () => {
-            const doc: LangiumDocument<PliProgram> = await parseStmts(`
- dcl 1 a,
-    2 b fixed bin value(31),
-    2 d fixed bin value(31);
- dcl x fixed bin valuelistfrom a;
-`);
-            expect(doc.parseResult.lexerErrors).toHaveLength(0);
-            expect(doc.parseResult.parserErrors).toHaveLength(0);
-        });
+        // Handle as validation error
+//         test.fails('fails with duplicate value in value list', async () => {
+//             const doc: LangiumDocument<PliProgram> = await parseStmts(`
+//  dcl 1 a,
+//     2 b fixed bin value(31),
+//     2 d fixed bin value(31);
+//  dcl x fixed bin valuelistfrom a;
+// `);
+//             expect(doc.parseResult.lexerErrors).toHaveLength(0);
+//             expect(doc.parseResult.parserErrors).toHaveLength(0);
+//         });
 
         test.fails('value list is too long to handle in compiler correctly', async () => {
             const doc: LangiumDocument<PliProgram> = await parseStmts(`
@@ -284,9 +286,9 @@ describe('PL/I Parsing tests', () => {
 
         test('value range declaration', async () => {
             const doc: LangiumDocument<PliProgram> = await parseStmts(`
-define alias numeric_month fixed bin(7) valuerange(1,12);
-dcl imonth type numeric_month; // must hold a val between 1 & 12 inclusive
-dcl cmonth char(3) // must be one of the 12 months listed
+ define alias numeric_month fixed bin(7) valuerange(1,12);
+ dcl imonth type numeric_month; // must hold a val between 1 & 12 inclusive
+ dcl cmonth char(3) // must be one of the 12 months listed
           valuelist( 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' );
 `);
@@ -412,7 +414,7 @@ dcl cmonth char(3) // must be one of the 12 months listed
     describe('Packages', () => {
 
         test('Package with main routine', async () => {
-            const doc: LangiumDocument<PliProgram> = await parseStmts(`
+            const doc: LangiumDocument<PliProgram> = await parse(`
  Package_Demo: Package exports (T);
  T: PROCEDURE OPTIONS (MAIN);
  END T;
@@ -425,7 +427,7 @@ dcl cmonth char(3) // must be one of the 12 months listed
 
     test('simple PUT', async () => {
         // output a string to the stdout
-        const doc: LangiumDocument<PliProgram> = await parseStmts(`put skip list('Hello ' || 'World');`);
+        const doc: LangiumDocument<PliProgram> = await parseStmts(` put skip list('Hello ' || 'World');`);
         expect(doc.parseResult.lexerErrors).toHaveLength(0);
         expect(doc.parseResult.parserErrors).toHaveLength(0);
     });

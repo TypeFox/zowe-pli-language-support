@@ -17,7 +17,7 @@ export class PliTokenBuilder extends DefaultTokenBuilder {
 
         terminalTokens.forEach(terminalToken => {
             const pattern = terminalToken.PATTERN;
-            if (typeof pattern === 'object' && pattern && 'test' in pattern && RegExpUtils.isWhitespace(pattern)) {
+            if (typeof pattern === 'object' && pattern && 'test' in pattern && RegExpUtils.isWhitespace(pattern) || terminalToken.name === 'ExecFragment') {
                 tokens.unshift(terminalToken);
             } else {
                 tokens.push(terminalToken);
