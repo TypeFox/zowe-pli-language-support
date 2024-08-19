@@ -25,6 +25,7 @@ import { PliScopeProvider } from './references/pli-scope-provider.js';
 import { PliNodeKindProvider } from './lsp/pli-node-kind-provider.js';
 import { PliDocumentationProvider } from './documentation.ts/pli-documentation-provider.js';
 import { PliCompletionProvider } from './lsp/pli-completion-provider.js';
+import { PliIndexManager } from './workspace/pli-index-manager.js';
 
 /**
  * Declaration of custom services - add your own service classes here.
@@ -74,6 +75,9 @@ export const PliModule: Module<Pl1Services, PartialLangiumServices & Pl1AddedSer
 export const PliSharedModule: Module<LangiumSharedServices, PartialLangiumSharedServices> = {
     lsp: {
         NodeKindProvider: () => new PliNodeKindProvider()
+    },
+    workspace: {
+        IndexManager: services => new PliIndexManager(services)
     }
 };
 

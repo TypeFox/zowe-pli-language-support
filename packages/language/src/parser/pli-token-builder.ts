@@ -23,6 +23,8 @@ export class PliTokenBuilder extends DefaultTokenBuilder {
                 tokens.push(terminalToken);
             }
         });
+        const execFragment = tokens.find(e => e.name === 'ExecFragment')!;
+        execFragment.START_CHARS_HINT = ['S', 'C'];
         return tokens;
     }
 }
