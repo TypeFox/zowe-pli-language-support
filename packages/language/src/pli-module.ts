@@ -10,7 +10,7 @@
  */
 
 import { type Module, inject } from 'langium';
-import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModuleContext, type LangiumServices, type LangiumSharedServices, type PartialLangiumServices } from 'langium/lsp';
+import { createDefaultModule, createDefaultSharedModule, PartialLangiumSharedServices, type DefaultSharedModuleContext, type LangiumServices, type LangiumSharedServices, type PartialLangiumServices } from 'langium/lsp';
 import { Pl1GeneratedModule, Pl1GeneratedSharedModule } from './generated/module.js';
 import { Pl1Validator, registerValidationChecks } from './pli-validator.js';
 import { Pl1Lexer } from './parser/pli-lexer.js';
@@ -19,6 +19,12 @@ import { PliTokenBuilder } from './parser/pli-token-builder.js';
 import { PliScopeComputation } from './references/pli-scope-computation.js';
 import { PliDocumentValidator } from './validation/pli-document-validator.js';
 import { PliSemanticTokenProvider } from './lsp/pli-semantic-highlighting.js';
+import { PliNameProvider } from './references/pli-name-provider.js';
+import { PliReferences } from './references/pli-references.js';
+import { PliScopeProvider } from './references/pli-scope-provider.js';
+import { PliNodeKindProvider } from './lsp/pli-node-kind-provider.js';
+import { PliDocumentationProvider } from './documentation.ts/pli-documentation-provider.js';
+import { PliCompletionProvider } from './lsp/pli-completion-provider.js';
 
 /**
  * Declaration of custom services - add your own service classes here.
@@ -40,8 +46,11 @@ export type Pl1Services = LangiumServices & Pl1AddedServices
  * declared custom services. The Langium defaults can be partially specified to override only
  * selected services, while the custom services must be fully specified.
  */
-export const Pl1Module: Module<Pl1Services, PartialLangiumServices & Pl1AddedServices> = {
+export const PliModule: Module<Pl1Services, PartialLangiumServices & Pl1AddedServices> = {
     Grammar: () => getPliGrammar(),
+    documentation: {
+        DocumentationProvider: services => new PliDocumentationProvider(services)
+    },
     validation: {
         Pl1Validator: () => new Pl1Validator(),
         DocumentValidator: services => new PliDocumentValidator(services)
@@ -51,10 +60,20 @@ export const Pl1Module: Module<Pl1Services, PartialLangiumServices & Pl1AddedSer
         TokenBuilder: () => new PliTokenBuilder()
     },
     references: {
-        ScopeComputation: services => new PliScopeComputation(services)
+        ScopeComputation: services => new PliScopeComputation(services),
+        NameProvider: () => new PliNameProvider(),
+        References: services => new PliReferences(services),
+        ScopeProvider: services => new PliScopeProvider(services)
     },
     lsp: {
-        SemanticTokenProvider: services => new PliSemanticTokenProvider(services)
+        SemanticTokenProvider: services => new PliSemanticTokenProvider(services),
+        CompletionProvider: services => new PliCompletionProvider(services)
+    }
+};
+
+export const PliSharedModule: Module<LangiumSharedServices, PartialLangiumSharedServices> = {
+    lsp: {
+        NodeKindProvider: () => new PliNodeKindProvider()
     }
 };
 
@@ -73,25 +92,26 @@ export const Pl1Module: Module<Pl1Services, PartialLangiumServices & Pl1AddedSer
  * @param context Optional module context with the LSP connection
  * @returns An object wrapping the shared services and the language-specific services
  */
-export function createPl1Services(context: DefaultSharedModuleContext): {
+export function createPliServices(context: DefaultSharedModuleContext): {
     shared: LangiumSharedServices,
-    Pl1: Pl1Services
+    pli: Pl1Services
 } {
     const shared = inject(
         createDefaultSharedModule(context),
-        Pl1GeneratedSharedModule
+        Pl1GeneratedSharedModule,
+        PliSharedModule
     );
-    const Pl1 = inject(
+    const pli = inject(
         createDefaultModule({ shared }),
         Pl1GeneratedModule,
-        Pl1Module
+        PliModule
     );
-    shared.ServiceRegistry.register(Pl1);
-    registerValidationChecks(Pl1);
+    shared.ServiceRegistry.register(pli);
+    registerValidationChecks(pli);
     if (!context.connection) {
         // We don't run inside a language server
         // Therefore, initialize the configuration provider instantly
         shared.workspace.ConfigurationProvider.initialized({});
     }
-    return { shared, Pl1 };
+    return { shared, pli };
 }

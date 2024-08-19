@@ -130,7 +130,7 @@ Unit: DeclareStatement | AllocateStatement | AssertStatement | AssignmentStateme
 
 AllocateStatement: ('ALLOCATE' | 'ALLOC') variables+=AllocatedVariable (',' variables+=AllocatedVariable)* ';';
 
-AllocatedVariable: level=NUMBER? name=FeatureID attribute=AllocateAttribute?;
+AllocatedVariable: level=NUMBER? var=ReferenceItem attribute=AllocateAttribute?;
 
 AllocateAttribute: AllocateDimension
     | AllocateType
@@ -143,7 +143,7 @@ AllocateDimension: dimensions=Dimensions;
 
 AllocateType: type=AllocateAttributeType dimensions=Dimensions?;
 
-AllocateAttributeType returns string: 'CHARACTER' | 'BIT' | 'GRAPHIC' | 'UCHAR' | 'WIDECHAR' | 'AREA';
+AllocateAttributeType returns string: 'CHAR' | 'CHARACTER' | 'BIT' | 'GRAPHIC' | 'UCHAR' | 'WIDECHAR' | 'AREA';
 
 AssertStatement: 'ASSERT' (
     true?='TRUE' '(' actual=Expression ')' 
@@ -165,7 +165,7 @@ BeginStatement: 'BEGIN' options=Options? recursive?='RECURSIVE'? (order?='ORDER'
 
 EndStatement: (labels+=LabelPrefix)* 'END' label=FeatureID?;
 
-CallStatement: 'CALL' reference=LocatorCall ('(' (arguments+=('*' | Expression) (',' arguments+=('*' | Expression))*)? ')')? ';';
+CallStatement: 'CALL' call=ProcedureCall ';';
 
 CancelThreadStatement: 'CANCEL' 'THREAD' '(' thread=LocatorCall ')' ';';
 
@@ -189,7 +189,7 @@ DefaultAttribute returns string:
     'ABNORMAL' | 'ALIGNED' | 'AREA' | 'ASSIGNABLE' | 'AUTOMATIC' 
     | 'BACKWARDS' | 'BASED' | 'BIT' | 'BUFFERED' | 'BUILTIN' | 'BYADDR' | 'BYVALUE' | 'BIN' | 'BINARY'
     | 'CHARACTER' | 'CHAR' | 'COMPLEX' | 'CONDITION' | 'CONNECTED' | 'CONSTANT' | 'CONTROLLED'
-    | 'DECIMAL' | 'DEC' | 'DEFINED' | 'DIMENSION' 
+    | 'DECIMAL' | 'DEC' | 'DIMENSION' 
     | 'EVENT' | 'EXCLUSIVE' | 'EXTERNAL' | 'EXT'
     | 'FILE' | 'FIXED' | 'FLOAT' | 'FORMAT'
     | 'GENERIC' | 'GRAPHIC'
@@ -206,7 +206,10 @@ DefaultAttribute returns string:
     | 'TASK' | 'TRANSIENT'
     | 'UNAL' | 'UCHAR' | 'UNALIGNED' | 'UNBUFFERED' | 'UNION' | 'UNSIGNED' | 'UPDATE'
     | 'VARIABLE' | 'VARYING' | 'VAR' | 'VARYING4' | 'VARYINGZ' | 'VARZ'
-    | 'WIDECHAR' | 'WIDEPIC'
+    | 'WIDECHAR'
+
+    | 'BIGENDIAN' | 'LITTLEENDIAN'
+
 ;
 
 DefineAliasStatement: ('DEFINE' | xDefine?='XDEFINE') 'ALIAS' name=FeatureID (attributes+=DeclarationAttribute (','? attributes+=DeclarationAttribute)*)? ';';
@@ -240,7 +243,7 @@ DisplayStatement: 'DISPLAY' '(' expression=Expression ')'
 DoStatement:
     'DO'
     // Note: DoType1 does nothing
-    (DoType2 | DoType3)? ';'
+    (DoType2 | DoType3<true>)? ';'
         statements+=Statement*
     end=EndStatement ';';
 
@@ -250,18 +253,18 @@ DoWhile: 'WHILE' '(' while=Expression ')' ('UNTIL' '(' until=Expression ')')?;
 
 DoUntil: 'UNTIL' '(' until=Expression ')' ('WHILE' '(' while=Expression ')')?;
 
-DoType3: variable=DoType3Variable '=' specifications+=DoSpecification (',' specifications+=DoSpecification)*;
+DoType3<content>: variable=DoType3Variable '=' specifications+=DoSpecification<content> (',' specifications+=DoSpecification<content>)*;
 
 DoType3Variable: name=ID;
 
-DoSpecification: exp1=Expression (
+DoSpecification<content>: exp1=Expression (
         'TO' to=Expression ('BY' by=Expression)?
         | 'BY' by=Expression ('TO' to=Expression)?
         | 'UPTHRU' upthru=Expression
         | 'DOWNTHRU' downthru=Expression
         | 'REPEAT' repeat=Expression
     )?
-    whileOrUntil=(DoWhile | DoUntil)?;
+    (<content> whileOrUntil=(DoWhile | DoUntil)?);
 
 ExecStatement: 'EXEC' query=ExecFragment ';';
 
@@ -285,9 +288,9 @@ FormatItem: AFormatItem | BFormatItem | CFormatItem | EFormatItem | FFormatItem 
     | ColumnFormatItem | GFormatItem | LFormatItem | LineFormatItem | PageFormatItem
     | RFormatItem | SkipFormatItem | VFormatItem | XFormatItem;
 
-AFormatItem: 'A' '(' fieldWidth=Expression ')';
+AFormatItem: 'A' ('(' fieldWidth=Expression ')')?;
 
-BFormatItem: 'B' '(' fieldWidth=Expression ')';
+BFormatItem: 'B' ('(' fieldWidth=Expression ')')?;
 
 CFormatItem: 'C' '(' item=(FFormatItem | EFormatItem | PFormatItem)')';
 
@@ -295,9 +298,9 @@ FFormatItem: 'F' '(' fieldWidth=Expression (',' fractionalDigits=Expression (','
 EFormatItem: 'E' '(' fieldWidth=Expression ',' fractionalDigits=Expression (',' significantDigits=Expression)? ')';
 PFormatItem: 'P' specification=STRING_TERM;
 
-ColumnFormatItem: 'COLUMN' '(' characterPosition=Expression ')';
+ColumnFormatItem: ('COLUMN' | 'COL') '(' characterPosition=Expression ')';
 
-GFormatItem: 'G' '(' fieldWidth=Expression ')';
+GFormatItem: 'G' ('(' fieldWidth=Expression ')')?;
 
 LFormatItem: {infer LFormatItem} 'L';
 
@@ -307,7 +310,7 @@ PageFormatItem: {infer PageFormatItem} 'PAGE';
 
 RFormatItem: 'R' '(' labelReference=FeatureID ')';
 
-SkipFormatItem: 'SKIP' '(' skip=Expression ')';
+SkipFormatItem: 'SKIP' ('(' skip=Expression ')')?;
 
 VFormatItem: {infer VFormatItem} 'V';
 
@@ -315,14 +318,17 @@ XFormatItem: 'X' '(' width=Expression ')';
 
 FreeStatement: 'FREE' references+=LocatorCall (',' references+=LocatorCall)* ';';
 
-GetStatement: 'GET'
-    ('FILE' '(' file=Expression ')')?
+GetStatement: 'GET' (
+    {infer GetFileStatement} ('FILE' '(' file=Expression ')')?
     (dataSpecification=DataSpecificationOptions)?
     (copy?='COPY' ('(' /* TODO REFERENCE */ copyReference=FeatureID ')')?)?
     (skip?='SKIP' ('(' skipExpression=Expression ')'))?
+    |
+    {infer GetStringStatement} 'STRING' '(' expression=Expression ')' dataSpecification=DataSpecificationOptions
+    )
 ;
 
-GoToStatement: ('GO' 'TO' | 'GOTO') /* TODO Reference to Label */ label=FeatureID ';';
+GoToStatement: ('GO' 'TO' | 'GOTO') label=LabelReference ';';
 
 IfStatement: 'IF' expression=Expression 'THEN' unit=Statement ('ELSE' else=Statement)?;
 
@@ -330,9 +336,9 @@ IncludeDirective: ('%INCLUDE' | '%XINCLUDE') items+=IncludeItem (',' items+=Incl
 
 IncludeItem: file=(STRING_TERM|ID) | ddname?='ddname' '(' file=(STRING_TERM|ID) ')';
 
-IterateStatement: 'ITERATE' /* TODO Reference to Label */ label=FeatureID? ';';
+IterateStatement: 'ITERATE' label=LabelReference? ';';
 
-LeaveStatement: 'LEAVE' /* TODO Reference to Label */ label=FeatureID? ';';
+LeaveStatement: 'LEAVE' label=LabelReference? ';';
 
 LineDirective: '%LINE' ('(' line=NUMBER ',' file=STRING_TERM ')') ';';
 
@@ -401,8 +407,9 @@ PushDirective: {infer PushDirective} '%PUSH' ';';
 
 PutStatement: 'PUT' 
     (
-        items+=PutItem* (dataSpecification=DataSpecificationOptions)?
-        | ('STRING' '(' stringExpression=Expression ')' dataSpecification=DataSpecificationOptions)
+        {infer PutFileStatement} items+=(PutItem | DataSpecificationOptions)* 
+        | 
+        {infer PutStringStatement} ('STRING' '(' stringExpression=Expression ')' dataSpecification=DataSpecificationOptions)
     ) ';'
 ;
 
@@ -413,16 +420,16 @@ PutAttribute returns string: 'PAGE' | 'LINE' | 'SKIP' | 'FILE';
 DataSpecificationOptions: (
     ('LIST'? '(' dataList=DataSpecificationDataList ')')
     | data?='DATA' ('(' dataListItems+=DataSpecificationDataListItem (',' dataListItems+=DataSpecificationDataListItem)* ')')?
-    | edit?='EDIT' ('(' dataLists+=DataSpecificationDataList ')' '(' formatLists+=DataSpecificationFormatList ')')+
+    | edit?='EDIT' ('(' dataLists+=DataSpecificationDataList ')' '(' formatLists+=FormatList ')')+
 );
 
-DataSpecificationDataList: items+=(DataSpecificationDataListItem | DataSpecificationDataListItem3DO) (',' items+=(DataSpecificationDataListItem | DataSpecificationDataListItem3DO))*;
+DataSpecificationDataList: items+=DataSpecificationDataListEntry (',' items+=DataSpecificationDataListEntry)*;
 
-DataSpecificationDataListItem: values+=Expression (',' values+=Expression)*;
+DataSpecificationDataListEntry: DataSpecificationDataListItem | DataSpecificationDataListItem3DO;
 
-DataSpecificationDataListItem3DO: {infer DataSpecificationDataListItem3DO} 'TODO';
+DataSpecificationDataListItem: value=Expression;
 
-DataSpecificationFormatList: DataSpecificationDataListItem;
+DataSpecificationDataListItem3DO: '(' list=DataSpecificationDataListEntry 'DO' do=DoType3<false> ')';
 
 QualifyStatement: {infer QualifyStatement} 'QUALIFY' ';';
 
@@ -447,8 +454,8 @@ RewriteStatement: 'REWRITE' 'FILE' '(' file=LocatorCall ')' ('FROM' '(' from=Loc
 
 // Ensure via validation that `Otherwise` appears last
 SelectStatement: 
-    'SELECT' '(' on=Expression ')' ';' 
-    (statements+=(WhenStatement | OtherwiseStatement))* 
+    'SELECT' ('(' on=Expression ')')? ';' 
+    (statements+=(WhenStatement | OtherwiseStatement))*
     end=EndStatement ';'
 ;
 
@@ -470,7 +477,7 @@ WriteStatement: 'WRITE' 'FILE' '(' fileReference=LocatorCall ')' 'FROM' '(' from
 
 InitialAttribute: (('INITIAL' | 'INIT') (
     direct?='(' items+=InitialAttributeItem (',' items+=InitialAttributeItem)* ')'
-    | call?='CALL' reference=ID ('(' arguments+=Expression (',' arguments+=Expression)* ')')?
+    | call?='CALL' procedureCall=ProcedureCall
     | to?='TO' '(' content=InitialToContent ')' '(' items+=InitialAttributeItem (',' items+=InitialAttributeItem)* ')'
     )
     | across?='INITACROSS' '(' expressions+=InitAcrossExpression (',' expressions+=InitAcrossExpression)* ')'
@@ -501,14 +508,16 @@ Group: {infer Group} 'GROUP';
 DeclareStatement: ('DCL' | 'DECLARE' | xDeclare?='XDECLARE' | xDeclare?='XDCL') items+=DeclaredItem (',' items+=DeclaredItem)*  ';';
 DeclaredItem: level=NUMBER? (elements+=DeclaredVariable | elements+='*' | '(' elements+=DeclaredVariable (',' elements+=DeclaredVariable)* ')') attributes+=DeclarationAttribute*;
 
-type NamedElement = DeclaredVariable | ProcedureParameter | DoType3Variable;
+type NamedElement = DeclaredVariable | DoType3Variable | ProcedureStatement;
 type NamedType = DefineAliasStatement;
 
 DeclaredVariable: name=ID;
 
-DeclarationAttribute: PictureAttribute | EnvironmentAttribute | DimensionsDataAttribute | ValueAttribute | ValueListFromAttribute | ValueListAttribute | ValueRangeAttribute | ComputationDataAttribute | EntryAttribute | LikeAttribute | TypeAttribute;
+DeclarationAttribute: DefinedAttribute | PictureAttribute | EnvironmentAttribute | DimensionsDataAttribute | ValueAttribute | ValueListFromAttribute | ValueListAttribute | ValueRangeAttribute | ComputationDataAttribute | EntryAttribute | LikeAttribute | TypeAttribute;
 
-PictureAttribute: ('PICTURE' | 'WIDEPIC' | 'PIC') picture=STRING_TERM;
+DefinedAttribute: ('DEFINED' | 'DEF') (reference=MemberCall | '(' reference=MemberCall ')') (('POSITION' | 'POS') '(' position=Expression ')')?;
+
+PictureAttribute: ('PICTURE' | 'WIDEPIC' | 'PIC') picture=STRING_TERM?;
 
 DimensionsDataAttribute: ('DIMENSION' | 'DIM')? dimensions=Dimensions;
 
@@ -537,7 +546,7 @@ Bound: (expression='*' | expression=Expression ('REFER' '(' refer=LocatorCall ')
 // ONLY FOR FILES
 EnvironmentAttribute: ('ENVIRONMENT' | 'ENV') '(' items+=EnvironmentAttributeItem* ')';
 
-EnvironmentAttributeItem: ref=ID ('(' (args+=Expression (','? args+=Expression)*)? ')')?;
+EnvironmentAttributeItem: environment=ID ('(' (args+=Expression (','? args+=Expression)*)? ')')?;
 
 EntryAttribute:
     'ENTRY'
@@ -562,7 +571,7 @@ EntryUnionDescription: init=NUMBER attributes+=DeclarationAttribute* optional?='
 
 PrefixedAttribute: level=NUMBER attribute=DeclarationAttribute?;
 
-ProcedureParameter: name=FeatureID;
+ProcedureParameter: id=FeatureID;
 
 ReferenceItem: ref=[NamedElement:FeatureID] dimensions=Dimensions?;
 
@@ -610,28 +619,36 @@ LocatorCall:
         (pointer?="->" | handle?="=>") element=MemberCall
     )*;
 
+ProcedureCall: procedure=[ProcedureStatement:ID]  ('(' (args+=Expression (',' args+=Expression)*)? ')')?;
+
+LabelReference: label=[LabelPrefix:ID];
+
 UnaryExpression: op=('+' | '-' | '¬' | '^') expr=Expression;
 
 ConstantExpression: Literal;
 
-Literal: ('(' multiplier=NUMBER ')')? value=(STRING_TERM | NUMBER | WRAPPED_NUM);
+Literal: ('(' multiplier=NUMBER ')')? value=(StringLiteral | NumberLiteral);
+
+StringLiteral: value=STRING_TERM;
+NumberLiteral: value=NUMBER;
 
 FQN returns string: ID ('.' ID)*;
 FeatureID returns string: ID;
 
 hidden terminal WS: /\s+/;
 terminal ExecFragment: /(?<=EXEC\s*)[a-zA-Z]+\s[^;]*/i;
-terminal ID: /[@#_a-zA-Z][\w_@#]*/;
+terminal ID: /[$@#_a-zA-Z][\w_$@#]*/;
 /**
  * Includes both fixed and non-fixed (with and without mantissa)
  */
 terminal NUMBER: FULL_NUM /([bB]|[iI])*/;
-terminal WRAPPED_NUM:  ("'" (FULL_NUM | HEX_CHAR*) "'") /([xX][uU]|[xX][nN]|[bB]4|[bB]3|[bB][xX]|[bB]|[gG][xX]|[gG]|[uU][xX]|[wW][xX]|[xX]|[iI])*/;
-terminal fragment HEX_CHAR: /[0-9a-fA-F]/;
+// terminal WRAPPED_NUM:  ("'" (FULL_NUM | HEX_CHAR*) "'") /([xX][uU]|[xX][nN]|[bB]4|[bB]3|[bB][xX]|[bB]|[gG][xX]|[gG]|[uU][xX]|[wW][xX]|[xX]|[iI])*/;
+// terminal fragment HEX_CHAR: /[0-9a-fA-F]/;
 terminal fragment NUM: /([0-9][0-9_]*(\.[0-9_]+)?)|(\.[0-9_]+)/;
 terminal fragment FULL_NUM: NUM MANTISSA?;
 terminal fragment MANTISSA: /[ESDQ][-+]?[0-9]+/;
-terminal STRING_TERM: /("(""|\\.|[^"\\])*"|'(''|\\.|[^'\\])*')([xX]|[aA]|[eE])*/;
+// This terminal combines WRAPPED_NUM and normal strings
+terminal STRING_TERM: /("(""|\\.|[^"\\])*"|'(''|\\.|[^'\\])*')([xX]|[aA]|[eE]|[xX][uU]|[xX][nN]|[bB]4|[bB]3|[bB][xX]|[bB]|[gG][xX]|[gG]|[uU][xX]|[wW][xX]|[xX]|[iI])*/;
 
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
 hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;

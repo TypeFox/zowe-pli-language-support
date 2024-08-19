@@ -1,4 +1,4 @@
-*PROCESS X(S),A(S),LINECOUNT(60);
+ /*PROCESS X(S),A(S),LINECOUNT(60); */
  /*          %M%    %I%    %D%    %T%
      PUNCH ' IDENTIFY **%M%1(''%M%/%I% %D% %T%'')'
      PUNCH ' ENTRY PLISTART '
@@ -840,14 +840,14 @@
 0        ('   I ', CHAR('NAME', 33),
           'TYPE       DCL  USE1  USE2 CALL1 CALL2')
 0        (SKIP, A, A, A)
-         ((I, ENTRY(I) DO I = 0 TO ENTRY_TABLE_COUNT))
+         (I, (ENTRY(I) DO I = 0 TO ENTRY_TABLE_COUNT))
          (SKIP, F(4), X(1), A(33), A(8), (5) F(6), X(1), A, X(1), A);
 0    PUT SKIP(3) EDIT
          ('----------- REF TABLE -----------')
          (A)
 0        ('   I ', CHAR('NAME', 33),' CALL_AT   COUNT  ENTRY#    NEXT#')
          (SKIP, A, A, A)
-0        ((I, REF(I) DO I = 1 TO REFERENCE_TABLE_COUNT))
+0        (I, (REF(I) DO I = 1 TO REFERENCE_TABLE_COUNT))
          (SKIP, F(4), X(1), A(33), (4) F(8));
 0END DUMP;
 1/*-------------------------------------------------------------------*/

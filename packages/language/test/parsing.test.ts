@@ -13,15 +13,15 @@ import { beforeAll, describe, expect, test } from "vitest";
 import { EmptyFileSystem, type LangiumDocument } from "langium";
 import { parseHelper } from "langium/test";
 import type { PliProgram } from "pl-one-language";
-import { createPl1Services } from "pl-one-language";
+import { createPliServices } from "pl-one-language";
 
-let services: ReturnType<typeof createPl1Services>;
+let services: ReturnType<typeof createPliServices>;
 let parse: ReturnType<typeof parseHelper<PliProgram>>;
 let parseStmts: ReturnType<typeof parseHelper<PliProgram>>;
 
 beforeAll(async () => {
-    services = createPl1Services(EmptyFileSystem);
-    parse = parseHelper<PliProgram>(services.Pl1);
+    services = createPliServices(EmptyFileSystem);
+    parse = parseHelper<PliProgram>(services.pli);
 
     /**
      * Helper function to parse a string of PL/I statements,
