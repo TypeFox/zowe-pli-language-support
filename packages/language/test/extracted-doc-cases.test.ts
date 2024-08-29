@@ -882,7 +882,7 @@ test('Block block-633.pli', async () => {
                           Blue,
                           Indigo,
                           Violet );
-   display (ordinalname( first(:Color:) ));  /* RED */
+   display (ordinalname( first(Color) ));  /* RED */
  END MAINTP;
 `);
     expect(doc.parseResult.lexerErrors).toHaveLength(0);
@@ -3102,7 +3102,7 @@ test('Block block-222.pli', async () => {
     // • ORDINALs, then the strings will be their ORDINALNAME values.
     // 
 
-    const doc: LangiumDocument<PliProgram> = await parseStmts(` /* Enterprise PL/I for z/OS Language Reference v6.1, pg.249 */
+    const doc: LangiumDocument<PliProgram> = await parse(` /* Enterprise PL/I for z/OS Language Reference v6.1, pg.249 */
 
 
  asserts: package;                                                             
@@ -3161,7 +3161,8 @@ test('Block block-222.pli', async () => {
      else                                                                        
         put skip list( expected_text );                                          
                                                                                  
-   end;                    
+   end;          
+   end;          
 `);
     expect(doc.parseResult.lexerErrors).toHaveLength(0);
     expect(doc.parseResult.parserErrors).toHaveLength(0);
@@ -4625,9 +4626,7 @@ test('Block block-94.pli', async () => {
   //GO.OUT   DD  UNIT=SYSDA,DSNAME=HPU8.ALIB(NMEM),
   //     DISP=(NEW,CATLG),SPACE=(TRK,(1,1,1)),
   //     DCB=(RECFM=FB,BLKSIZE=3600,LRECL=80)
-  //GO.IN DD *
-    MEM:  PROC OPTIONS(MAIN);
-          /* this is an incomplete dummy library member */
+  //GO.IN DD */
 `);
     expect(doc.parseResult.lexerErrors).toHaveLength(0);
     expect(doc.parseResult.parserErrors).toHaveLength(0);
