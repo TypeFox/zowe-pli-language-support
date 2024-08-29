@@ -3,8 +3,12 @@ import { CancellationToken } from "vscode-jsonrpc";
 
 export class PliScopeComputation extends DefaultScopeComputation {
 
-    override computeExports(_document: LangiumDocument, _cancelToken?: CancellationToken): Promise<AstNodeDescription[]> {
-        return Promise.resolve([]);
+    override computeExports(document: LangiumDocument, cancelToken?: CancellationToken): Promise<AstNodeDescription[]> {
+        if (document.uri.scheme === 'pli-builtin') {
+            return super.computeExports(document, cancelToken);
+        } else {
+            return Promise.resolve([]);
+        }
     }
 
     protected override processNode(node: AstNode, document: LangiumDocument, scopes: PrecomputedScopes): void {

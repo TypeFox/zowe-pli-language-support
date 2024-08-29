@@ -13,11 +13,13 @@ import type { LanguageClientOptions, ServerOptions } from 'vscode-languageclient
 import type * as vscode from 'vscode';
 import * as path from 'node:path';
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node.js';
+import { BuiltinFileSystemProvider } from './builtin-files';
 
 let client: LanguageClient;
 
 // This function is called when the extension is activated.
 export function activate(context: vscode.ExtensionContext): void {
+    BuiltinFileSystemProvider.register(context);
     client = startLanguageClient(context);
 }
 
