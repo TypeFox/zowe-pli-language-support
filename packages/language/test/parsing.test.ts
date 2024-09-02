@@ -101,7 +101,7 @@ describe('PL/I Parsing tests', () => {
             expect(doc.parseResult.parserErrors).toHaveLength(0);
         });
 
-        test('Simple recursive procedure', async () => {
+        test('Simple recursive procedure w/ recursive stated before returns', async () => {
             const doc: LangiumDocument<PliProgram> = await parseStmts(`
  Fact: proc (Input) recursive returns (fixed bin(31));
   dcl Input fixed bin(15);
@@ -110,6 +110,108 @@ describe('PL/I Parsing tests', () => {
   else
   return( Input*Fact(Input-1) );
  end Fact;`);
+            expect(doc.parseResult.lexerErrors).toHaveLength(0);
+            expect(doc.parseResult.parserErrors).toHaveLength(0);
+        });
+
+        test('Simple recursive procedure w/ recursive stated after returns', async () => {
+            const doc: LangiumDocument<PliProgram> = await parseStmts(`
+ Fact: proc (Input) returns (fixed bin(31)) recursive;
+  dcl Input fixed bin(15);
+  if Input <= 1 then
+  return(1);
+  else
+  return( Input*Fact(Input-1) );
+ end Fact;`);
+            expect(doc.parseResult.lexerErrors).toHaveLength(0);
+            expect(doc.parseResult.parserErrors).toHaveLength(0);
+        });
+
+        test('Procedures w/ Order & Reorder options', async () => {
+            const doc: LangiumDocument<PliProgram> = await parseStmts(`
+ P1: proc Options(Order);
+ end P1;
+ P2: proc Options( Reorder );
+ end P2;
+ call P1;
+ call P2;`);
+            expect(doc.parseResult.lexerErrors).toHaveLength(0);
+            expect(doc.parseResult.parserErrors).toHaveLength(0);
+        });
+
+        test('Procedure w/ Reorder option & Returns', async () => {
+            const doc: LangiumDocument<PliProgram> = await parseStmts(`
+ Double: proc (Input) Options(Reorder) returns(fixed bin(31));
+  declare Input fixed bin(15);
+  return( Input * 2);
+ end Double;
+ declare X fixed bin(31);
+ X = Double(5);`);
+            expect(doc.parseResult.lexerErrors).toHaveLength(0);
+            expect(doc.parseResult.parserErrors).toHaveLength(0);
+        });
+
+        test('Recursive - Returns - Options for a Procedure in various permutations', async () => {
+            const doc: LangiumDocument<PliProgram> = await parseStmts(`
+ // returns - options - recursive
+ F1: proc (Input) returns (fixed bin(31)) Options(Order) recursive;
+  dcl Input fixed bin(15);
+  if Input <= 1 then
+  return(1);
+  else
+  return( Input*F1(Input-1) );
+ end F1;
+
+ // options - returns - recursive
+ F2: proc (Input) Options(Order) returns (fixed bin(31)) recursive;
+  dcl Input fixed bin(15);
+  if Input <= 1 then
+  return(1);
+  else
+  return( Input*F2(Input-1) );
+ end F2;
+
+ // options - recursive - returns
+ F3: proc (Input) Options(Order) recursive returns (fixed bin(31));
+  dcl Input fixed bin(15);
+  if Input <= 1 then
+  return(1);
+  else
+  return( Input*F3(Input-1) );
+ end F3;
+
+ // returns - options - recursive
+ F4: proc (Input) returns (fixed bin(31)) Options(Order) recursive;
+  dcl Input fixed bin(15);
+  if Input <= 1 then
+  return(1);
+  else
+  return( Input*F4(Input-1) );
+ end F4;
+
+ // returns - recursive - options
+ F5: proc (Input) returns (fixed bin(31)) recursive Options(Order);
+  dcl Input fixed bin(15);
+  if Input <= 1 then
+  return(1);
+  else
+  return( Input*F5(Input-1) );
+ end F5;
+ `);
+            expect(doc.parseResult.lexerErrors).toHaveLength(0);
+            expect(doc.parseResult.parserErrors).toHaveLength(0);
+        });
+
+        test('Options Separate by Commas & Spaces', async () => {
+            const doc: LangiumDocument<PliProgram> = await parseStmts(`
+    P1: proc Options( Order, Reorder, Recursive );
+    end P1;
+    P2: proc Options( Order Reorder Recursive);
+    end P2;
+    P3: proc Options(Order Reorder, Recursive );
+    end P3;
+    P4: proc Options(Order, Reorder Recursive);
+    end P4;`);
             expect(doc.parseResult.lexerErrors).toHaveLength(0);
             expect(doc.parseResult.parserErrors).toHaveLength(0);
         });
@@ -498,6 +600,15 @@ describe('PL/I Parsing tests', () => {
  call Vrtn(10, *, 15.5);
  call Vrtn(10, addr(x), 15.5);
 `);
+        expect(doc.parseResult.lexerErrors).toHaveLength(0);
+        expect(doc.parseResult.parserErrors).toHaveLength(0);
+    });
+    
+    test('Block 27', async () => {
+        const doc: LangiumDocument<PliProgram> = await parseStmts(`
+    /* Enterprise PL/I for z/OS Language Reference v6.1, pg.59 */
+    A = '/* This is a constant, not a comment */' ;
+    `);
         expect(doc.parseResult.lexerErrors).toHaveLength(0);
         expect(doc.parseResult.parserErrors).toHaveLength(0);
     });

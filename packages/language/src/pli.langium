@@ -43,7 +43,6 @@ Options: 'OPTIONS' '(' items+=OptionsItem (','? items+=OptionsItem)* ')';
 
 OptionsItem: 
     SimpleOptionsItem |
-    MainOptionsItem |
     CMPATOptionsItem |
     LinkageOptionsItem |
     NoMapOptionsItem;
@@ -52,13 +51,11 @@ LinkageOptionsItem: 'LINKAGE' '(' value=('CDECL' | 'OPTLINK' | 'STDCALL' | 'SYST
 
 CMPATOptionsItem: 'CMPAT' '(' value=('V1' | 'V2' | 'V3') ')';
 
-MainOptionsItem: 'MAIN' (noExecOps?='NOEXECOPS')?;
-
 NoMapOptionsItem: type=('NOMAP' | 'NOMAPIN' | 'NOMAPOUT') ('(' (parameters+=FeatureID (',' parameters+=FeatureID)*)? ')')?;
 
 SimpleOptionsItem: value=(
     // BEGIN/PACKAGE statement
-    'ORDER' | 'REORDER' | 'NOCHARGRAPHIC' | 'CHARGRAPHIC' | 'NOINLINE' | 'INLINE' |
+    'ORDER' | 'REORDER' | 'NOCHARGRAPHIC' | 'CHARGRAPHIC' | 'NOINLINE' | 'INLINE' | 'MAIN' | 'NOEXECOPS' |
     // ENTRY declaration
     'COBOL' | 'FORTRAN' | 'BYADDR' | 'BYVALUE' | 'DESCRIPTOR' | 'NODESCRIPTOR' |
     'IRREDUCIBLE' | 'REDUCIBLE' | 'NORETURN' | 'REENTRANT' |
@@ -67,7 +64,7 @@ SimpleOptionsItem: value=(
     // PROCEDURE statement
     'DLLINTERNAL' | 'FROMALIEN' | 'RETCODE' | 'ASSEMBLER' | /* abbr */ 'ASM' | 'WINMAIN' |
     // Undocumented (?)
-    'INTER'
+    'INTER' | 'RECURSIVE'
     );
 
 PackageLevelStatements: DeclareStatement | DefineAliasStatement | DefineOrdinalStatement | DefineStructureStatement | DefaultStatement | ProcedureStatement;
@@ -82,7 +79,7 @@ ProcedureStatement:
         options+=Options |
         recursive+='RECURSIVE' |
         (order+=('ORDER' | 'REORDER')) |
-        ('EXTERNAL' environmentName+=FeatureID) |
+        (('EXTERNAL' | 'EXT') ('(' environmentName+=Expression ')')?) |
         scope+=ScopeAttribute
     )* ';'
     statements+=ProcedureLevelStatement*
@@ -93,17 +90,16 @@ ScopeAttribute returns string: ('STATIC' | 'DYNAMIC');
 
 LabelPrefix: name=FeatureID ':';
 
-EntryStatement: 
-    (labels+=LabelPrefix)*
+EntryStatement:
     'ENTRY'
     ('(' (parameters+=ProcedureParameter (',' parameters+=ProcedureParameter)*)? ')')?
-    (('EXTERNAL' environmentName+=FeatureID?) |
+    ((('EXTERNAL' | 'EXT') ('(' environmentName+=Expression ')')?) |
     variable+='VARIABLE' |
     limited+='LIMITED' |
     returns+=ReturnsOption |
     options+=Options)* ';';
 
-ProcedureLevelStatement: Statement | Group | ProcedureStatement | BeginStatement;
+ProcedureLevelStatement: Statement | ProcedureStatement;
 
 // #region Statements
 
@@ -163,19 +159,19 @@ BeginStatement: 'BEGIN' options=Options? recursive?='RECURSIVE'? (order?='ORDER'
     statements+=Statement*
     end=EndStatement ';';
 
-EndStatement: (labels+=LabelPrefix)* 'END' label=FeatureID?;
+EndStatement: (labels+=LabelPrefix)* 'END' label=LabelReference?;
 
 CallStatement: 'CALL' call=ProcedureCall ';';
 
 CancelThreadStatement: 'CANCEL' 'THREAD' '(' thread=LocatorCall ')' ';';
 
-CloseStatement: 'CLOSE' 'FILE' '(' (file=MemberCall | star?='*') ')' ';';
+CloseStatement: 'CLOSE' 'FILE' '(' (files+=MemberCall | files+='*') ')' (','? 'FILE' '(' (files+=MemberCall | files+='*') ')')* ';';
 
 DefaultStatement: ('DEFAULT' | 'DFT') expressions+=DefaultExpression (',' expressions+=DefaultExpression)* ';';
 
 DefaultExpression: expression=DefaultExpressionPart attributes+=DeclarationAttribute*;
 
-DefaultExpressionPart: ('RANGE' '(' identifiers=DefaultRangeIdentifiers ')' | '(' expression=DefaultAttributeExpression ')');
+DefaultExpressionPart: 'DESCRIPTORS' expression=DefaultAttributeExpression | ('RANGE' '(' identifiers=DefaultRangeIdentifiers ')' | '(' expression=DefaultAttributeExpression ')');
 
 DefaultRangeIdentifiers: (identifiers+=('*' | DefaultRangeIdentifierItem) (',' identifiers+=('*' | DefaultRangeIdentifierItem))*);
 
@@ -188,13 +184,13 @@ DefaultAttributeExpressionNot: (not?='NOT')? value=DefaultAttribute;
 DefaultAttribute returns string:
     'ABNORMAL' | 'ALIGNED' | 'AREA' | 'ASSIGNABLE' | 'AUTOMATIC' 
     | 'BACKWARDS' | 'BASED' | 'BIT' | 'BUFFERED' | 'BUILTIN' | 'BYADDR' | 'BYVALUE' | 'BIN' | 'BINARY'
-    | 'CHARACTER' | 'CHAR' | 'COMPLEX' | 'CONDITION' | 'CONNECTED' | 'CONSTANT' | 'CONTROLLED'
-    | 'DECIMAL' | 'DEC' | 'DIMENSION' 
+    | 'CHARACTER' | 'CHAR' | 'COMPLEX' | 'CONDITION' | 'CONNECTED' | 'CONSTANT' | 'CONTROLLED' | 'CTL'
+    | 'DECIMAL' | 'DEC' | 'DIMACROSS'
     | 'EVENT' | 'EXCLUSIVE' | 'EXTERNAL' | 'EXT'
     | 'FILE' | 'FIXED' | 'FLOAT' | 'FORMAT'
     | 'GENERIC' | 'GRAPHIC'
     | 'HEX' | 'HEXADEC'
-    | 'IEEE' | 'INITIAL' | 'INIT' | 'INONLY' | 'INOUT' | 'INTERNAL' | 'INT' | 'IRREDUCIBLE' | 'INPUT'
+    | 'IEEE' | 'INONLY' | 'INOUT' | 'INTERNAL' | 'INT' | 'IRREDUCIBLE' | 'INPUT'
     | 'KEYED'
     | 'LABEL' | 'LIST'
     | 'MEMBER'
@@ -217,6 +213,7 @@ DefineAliasStatement: ('DEFINE' | xDefine?='XDEFINE') 'ALIAS' name=FeatureID (at
 DefineOrdinalStatement:
     ('DEFINE' | xDefine?='XDEFINE') 'ORDINAL' name=FQN
     '(' ordinalValues=OrdinalValueList ')' 
+    (signed?='SIGNED' | unsigned?='UNSIGNED')?
     (('PRECISION' | 'PREC') '(' precision=NUMBER ')')? 
     (signed?='SIGNED' | unsigned?='UNSIGNED')?
     ';';
@@ -225,9 +222,9 @@ OrdinalValueList: members+=OrdinalValue (',' members+=OrdinalValue)*;
 
 OrdinalValue: name=FeatureID ('VALUE'  '(' value=NUMBER ')')?;
 
-DefineStructureStatement: ('DEFINE' | xDefine?='XDEFINE') 'STRUCTURE' level=NUMBER name=FQN (union?='UNION')? (',' substructures+=SubStructure)* ';';
+DefineStructureStatement: ('DEFINE' | xDefine?='XDEFINE') ('STRUCTURE'|'STRUCT') level=NUMBER name=FQN (union?='UNION')? (',' substructures+=SubStructure)* ';';
 
-SubStructure: level=NUMBER name=FeatureID (attributes+=DeclarationAttribute (',' attributes+=DeclarationAttribute)*)?;
+SubStructure: level=NUMBER name=FeatureID attributes+=DeclarationAttribute*;
 
 DelayStatement: 'DELAY' '(' delay=Expression ')' ';';
 
@@ -383,7 +380,7 @@ OpenOptionsGroup:
     'FILE' '(' file=ReferenceItem ')'
     (stream?='STREAM' | record?='RECORD')?
     (input?='INPUT' | output?='OUTPUT' | update?='UPDATE')?
-    ((sequential?='SEQUENTIAL' | direct?='DIRECT') (unbuffered?='UNBUFFERED' | buffered?='BUFFERED')?)?
+    ((sequential?=('SEQUENTIAL'|'SEQL') | direct?='DIRECT')? (unbuffered?=('UNBUFFERED'|'UNBUF') | buffered?=('BUF'|'BUFFERED'))?)?
     keyed?='KEYED'?
     print?='PRINT'?
     ('TITLE' '(' title=Expression ')')?
@@ -431,7 +428,11 @@ DataSpecificationDataListItem: value=Expression;
 
 DataSpecificationDataListItem3DO: '(' list=DataSpecificationDataListEntry 'DO' do=DoType3<false> ')';
 
-QualifyStatement: {infer QualifyStatement} 'QUALIFY' ';';
+QualifyStatement: 
+    'QUALIFY' ';'
+    statements+=Statement*
+    end=EndStatement ';'
+;
 
 ReadStatement: 'READ' 'FILE' '(' fileReference=LocatorCall ')' 
     (
@@ -483,7 +484,7 @@ InitialAttribute: (('INITIAL' | 'INIT') (
     | across?='INITACROSS' '(' expressions+=InitAcrossExpression (',' expressions+=InitAcrossExpression)* ')'
     );
 
-InitialToContent: (varying=Varying type=CharType | type=CharType varying=Varying?);
+InitialToContent: (varying=Varying type=CharType? | type=CharType varying=Varying?);
 
 Varying returns string: 'VARYING' | 'VARYING4' | 'VARYINGZ' | 'NONVARYING';
 
@@ -497,23 +498,23 @@ InitialAttributeItemStar: {infer InitialAttributeItemStar} '*';
 InitialAttributeConstant: constant=ConstantExpression;
 InitialAttributeReference: reference=ID;
 InitialAttributeExpression: '(' expression=Expression ')';
-InitialAttributeSpecification: '(' star?='*' | expression=Expression ')' item=InitialAttributeSpecificationIteration;
+InitialAttributeSpecification: '(' (star?='*' | expression=Expression) ')' item=InitialAttributeSpecificationIteration;
 
 InitialAttributeSpecificationIteration: InitialAttributeItemStar | InitialAttributeConstant | InitialAttributeReference | InitialAttributeSpecificationIterationValue;
 
 InitialAttributeSpecificationIterationValue: '(' items+=InitialAttributeItem (',' items+=InitialAttributeItem)* ')';
 
-Group: {infer Group} 'GROUP';
-
 DeclareStatement: ('DCL' | 'DECLARE' | xDeclare?='XDECLARE' | xDeclare?='XDCL') items+=DeclaredItem (',' items+=DeclaredItem)*  ';';
-DeclaredItem: level=NUMBER? (elements+=DeclaredVariable | elements+='*' | '(' elements+=DeclaredVariable (',' elements+=DeclaredVariable)* ')') attributes+=DeclarationAttribute*;
+DeclaredItem: level=NUMBER? (elements+=DeclaredVariable | elements+='*' | '(' items+=DeclaredItem (',' items+=DeclaredItem)* ')') attributes+=DeclarationAttribute*;
 
 type NamedElement = DeclaredVariable | DoType3Variable | ProcedureStatement;
 type NamedType = DefineAliasStatement;
 
 DeclaredVariable: name=ID;
 
-DeclarationAttribute: DefinedAttribute | PictureAttribute | EnvironmentAttribute | DimensionsDataAttribute | ValueAttribute | ValueListFromAttribute | ValueListAttribute | ValueRangeAttribute | ComputationDataAttribute | EntryAttribute | LikeAttribute | TypeAttribute;
+DeclarationAttribute: InitialAttribute | DateAttribute | HandleAttribute | DefinedAttribute | PictureAttribute | EnvironmentAttribute | DimensionsDataAttribute | ValueAttribute | ValueListFromAttribute | ValueListAttribute | ValueRangeAttribute | ComputationDataAttribute | EntryAttribute | LikeAttribute | TypeAttribute;
+
+DateAttribute: 'DATE' ('(' pattern=STRING_TERM ')')?;
 
 DefinedAttribute: ('DEFINED' | 'DEF') (reference=MemberCall | '(' reference=MemberCall ')') (('POSITION' | 'POS') '(' position=Expression ')')?;
 
@@ -521,11 +522,13 @@ PictureAttribute: ('PICTURE' | 'WIDEPIC' | 'PIC') picture=STRING_TERM?;
 
 DimensionsDataAttribute: ('DIMENSION' | 'DIM')? dimensions=Dimensions;
 
-TypeAttribute: 'TYPE' type=[NamedType:ID];
+TypeAttribute: 'TYPE' (type=[NamedType:ID] | '(' type=[NamedType:ID] ')');
 
 ComputationDataAttribute: type=DataAttributeType dimensions=Dimensions?;
 
-ValueAttribute: 'VALUE' '(' value=Expression ')';
+ValueAttribute: 'VALUE' '(' (items+=ValueAttributeItem (',' items+=ValueAttributeItem)* | value=Expression) ')';
+
+ValueAttributeItem: attributes+=DeclarationAttribute+;
 
 ValueListAttribute: 'VALUELIST' '(' (values+=Expression (',' values+=Expression)*)? ')';
 
@@ -536,6 +539,8 @@ ValueRangeAttribute: 'VALUERANGE' '(' (values+=Expression (',' values+=Expressio
 DataAttributeType returns string: DefaultAttribute;
 
 LikeAttribute: 'LIKE' reference=LocatorCall;
+
+HandleAttribute: 'HANDLE' ('(' size=NUMBER ')')? (type=[NamedType:ID] | '(' type=[NamedType:ID] ')');
 
 Dimensions: '(' (dimensions+=DimensionBound (',' dimensions+=DimensionBound)*)? ')';
 
@@ -549,6 +554,9 @@ EnvironmentAttribute: ('ENVIRONMENT' | 'ENV') '(' items+=EnvironmentAttributeIte
 EnvironmentAttributeItem: environment=ID ('(' (args+=Expression (','? args+=Expression)*)? ')')?;
 
 EntryAttribute:
+    (
+        limited+='LIMITED'
+    )*
     'ENTRY'
     ('(' attributes+=EntryDescription (',' attributes+=EntryDescription)* ')')?
     (
@@ -556,7 +564,7 @@ EntryAttribute:
         variable+='VARIABLE' |
         limited+='LIMITED' |
         returns+=ReturnsOption |
-        ('EXTERNAL' '(' environmentName+=ID ')')
+        (('EXTERNAL' | 'EXT') ('(' environmentName+=Expression ')')?)
     )*
     
 ;
@@ -565,11 +573,11 @@ ReturnsOption: 'RETURNS' '(' returnAttribute=DeclarationAttribute* ')';
 
 EntryDescription: EntryParameterDescription | EntryUnionDescription;
 
-EntryParameterDescription: (attributes+=DeclarationAttribute+ | '*' option=DefaultAttribute? optional?='OPTIONAL'?);
+EntryParameterDescription: (attributes+=DeclarationAttribute+ | star?='*' attributes+=DeclarationAttribute*);
 
-EntryUnionDescription: init=NUMBER attributes+=DeclarationAttribute* optional?='OPTIONAL'? ',' prefixedAttributes+=PrefixedAttribute*;
+EntryUnionDescription: init=NUMBER attributes+=DeclarationAttribute* ',' prefixedAttributes+=PrefixedAttribute*;
 
-PrefixedAttribute: level=NUMBER attribute=DeclarationAttribute?;
+PrefixedAttribute: level=NUMBER attribute=DeclarationAttribute*;
 
 ProcedureParameter: id=FeatureID;
 
@@ -619,7 +627,7 @@ LocatorCall:
         (pointer?="->" | handle?="=>") element=MemberCall
     )*;
 
-ProcedureCall: procedure=[ProcedureStatement:ID]  ('(' (args+=Expression (',' args+=Expression)*)? ')')?;
+ProcedureCall: procedure=[ProcedureStatement:ID]  ('(' (args+=(Expression | '*') (',' args+=(Expression | '*'))*)? ')')?;
 
 LabelReference: label=[LabelPrefix:ID];
 
@@ -646,7 +654,7 @@ terminal NUMBER: FULL_NUM /([bB]|[iI])*/;
 // terminal fragment HEX_CHAR: /[0-9a-fA-F]/;
 terminal fragment NUM: /([0-9][0-9_]*(\.[0-9_]+)?)|(\.[0-9_]+)/;
 terminal fragment FULL_NUM: NUM MANTISSA?;
-terminal fragment MANTISSA: /[ESDQ][-+]?[0-9]+/;
+terminal fragment MANTISSA: /[eEsSdDqQ][-+]?[0-9]+/;
 // This terminal combines WRAPPED_NUM and normal strings
 terminal STRING_TERM: /("(""|\\.|[^"\\])*"|'(''|\\.|[^'\\])*')([xX]|[aA]|[eE]|[xX][uU]|[xX][nN]|[bB]4|[bB]3|[bB][xX]|[bB]|[gG][xX]|[gG]|[uU][xX]|[wW][xX]|[xX]|[iI])*/;
 
