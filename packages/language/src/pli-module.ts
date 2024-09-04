@@ -14,7 +14,6 @@ import { createDefaultModule, createDefaultSharedModule, PartialLangiumSharedSer
 import { Pl1GeneratedModule, Pl1GeneratedSharedModule } from './generated/module.js';
 import { Pl1Validator, registerValidationChecks } from './pli-validator.js';
 import { Pl1Lexer } from './parser/pli-lexer.js';
-import { getPliGrammar } from './parser/pli-grammar.js';
 import { PliTokenBuilder } from './parser/pli-token-builder.js';
 import { PliScopeComputation } from './references/pli-scope-computation.js';
 import { PliDocumentValidator } from './validation/pli-document-validator.js';
@@ -49,7 +48,6 @@ export type Pl1Services = LangiumServices & Pl1AddedServices
  * selected services, while the custom services must be fully specified.
  */
 export const PliModule: Module<Pl1Services, PartialLangiumServices & Pl1AddedServices> = {
-    Grammar: () => getPliGrammar(),
     documentation: {
         DocumentationProvider: services => new PliDocumentationProvider(services)
     },

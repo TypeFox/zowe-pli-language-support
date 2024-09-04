@@ -26,7 +26,8 @@
     "main": "./out/extension/main.cjs",
     "scripts": {
         "clean": "shx rm -fr *.tsbuildinfo out",
-        "vscode:prepublish": "npm run build",
+        "vscode:prepublish": "npm run build && node esbuild.mjs --minify",
+        "package": "vsce package --no-dependencies",
         "build": "tsc -b tsconfig.json && node esbuild.mjs",
         "build:clean": "npm run clean && npm run build",
         "watch": "concurrently -n tsc,esbuild -c blue,yellow \"tsc -b tsconfig.json --watch\" \"node esbuild.mjs --watch\""
@@ -38,6 +39,7 @@
     },
     "devDependencies": {
         "@types/vscode": "~1.67.0",
+        "@vscode/vsce": "^3.0.0",
         "concurrently": "~8.2.1",
         "esbuild": "~0.21.5"
     }
