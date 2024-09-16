@@ -33,7 +33,8 @@
         "watch": "concurrently -n tsc,esbuild -c blue,yellow \"tsc -b tsconfig.json --watch\" \"node esbuild.mjs --watch\""
     },
     "dependencies": {
-        "pl-one-language": "0.0.1",
+        "langium": "~3.1.3",
+        "pl-one-language": "workspace:*",
         "vscode-languageclient": "~9.0.1",
         "vscode-languageserver": "~9.0.1"
     },

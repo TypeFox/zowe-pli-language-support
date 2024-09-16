@@ -10,7 +10,7 @@
  */
 
 import { AstNode, AstNodeDescription, AstUtils, DefaultScopeComputation, LangiumDocument, PrecomputedScopes } from "langium";
-import { CancellationToken } from "vscode-jsonrpc";
+import { CancellationToken } from "vscode-languageserver";
 
 export class PliScopeComputation extends DefaultScopeComputation {
 
