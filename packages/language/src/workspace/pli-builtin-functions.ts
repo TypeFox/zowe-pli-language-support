@@ -1,4 +1,4 @@
- // Mathematical functions
+export const Builtins = ` // Mathematical functions
  ABS: PROC (value) RETURNS ();
  END;
 
@@ -376,4 +376,4 @@
  SHA3INITx: PROC (buffer) RETURNS ();
  END;
  SHA3UPDATEx: PROC (buffer) RETURNS ();
- END;
+ END;`;

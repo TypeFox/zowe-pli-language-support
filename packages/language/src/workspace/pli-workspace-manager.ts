@@ -10,8 +10,7 @@
  */
 
 import { DefaultWorkspaceManager, LangiumDocument, LangiumDocumentFactory, URI, WorkspaceFolder } from "langium";
-// @ts-ignore
-import builtins from '../../builtin/builtin-functions.pli';
+import { Builtins } from "./pli-builtin-functions.js";
 import { LangiumSharedServices } from "langium/lsp";
 
 export class PliWorkspaceManager extends DefaultWorkspaceManager {
@@ -24,7 +23,7 @@ export class PliWorkspaceManager extends DefaultWorkspaceManager {
     }
 
     protected override async loadAdditionalDocuments(_folders: WorkspaceFolder[], _collector: (document: LangiumDocument) => void): Promise<void> {
-        const document = this.factory.fromString(builtins, URI.parse('pli-builtin:///builtins.pli'));
+        const document = this.factory.fromString(Builtins, URI.parse('pli-builtin:///builtins.pli'));
         _collector(document);
     }
 }

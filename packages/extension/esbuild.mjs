@@ -49,7 +49,7 @@ const ctx = await esbuild.context({
     outExtension: {
         '.js': '.cjs'
     },
-    loader: { '.ts': 'ts', '.pli': 'text' },
+    loader: { '.ts': 'ts' },
     external: ['vscode'],
     platform: 'node',
     sourcemap: !minify,

@@ -10,8 +10,7 @@
  */
 
 import * as vscode from 'vscode';
-// @ts-ignore
-import builtin from '../../../language/builtin/builtin-functions.pli';
+import { Builtins } from 'pl-one-language';
 
 export class BuiltinFileSystemProvider implements vscode.FileSystemProvider {
 
@@ -28,7 +27,7 @@ export class BuiltinFileSystemProvider implements vscode.FileSystemProvider {
         return {
             ctime: date,
             mtime: date,
-            size: Buffer.from(builtin).length,
+            size: Buffer.from(Builtins).length,
             type: vscode.FileType.File
         };
     }
@@ -36,7 +35,7 @@ export class BuiltinFileSystemProvider implements vscode.FileSystemProvider {
     readFile(uri: vscode.Uri): Uint8Array {
         // We could return different libraries based on the URI
         // We have only one, so we always return the same
-        return new Uint8Array(Buffer.from(builtin));
+        return new Uint8Array(Buffer.from(Builtins));
     }
 
     // The following class members only serve to satisfy the interface
