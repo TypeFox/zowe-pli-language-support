@@ -9,6 +9,13 @@
  *
  */
 
+import { describe, test } from "vitest";
+
+describe('Validating', () => {
+
+    test('empty test', () => {
+    });
+});
 // import { afterEach, beforeAll, describe, expect, test } from "vitest";
 // import { EmptyFileSystem, type LangiumDocument } from "langium";
 // import { expandToString as s } from "langium/generate";

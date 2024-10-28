@@ -492,15 +492,13 @@ CharType returns string: 'CHAR' | 'UCHAR' | 'WCHAR';
 
 InitAcrossExpression: '(' expressions+=Expression (',' expressions+=Expression)* ')';
 
-InitialAttributeItem: InitialAttributeItemStar | InitialAttributeConstant | InitialAttributeReference | InitialAttributeExpression | InitialAttributeSpecification;
+InitialAttributeItem: InitialAttributeItemStar | InitialAttributeSpecification | InitialAttributeExpression;
 
 InitialAttributeItemStar: {infer InitialAttributeItemStar} '*';
-InitialAttributeConstant: constant=ConstantExpression;
-InitialAttributeReference: reference=ID;
-InitialAttributeExpression: '(' expression=Expression ')';
+InitialAttributeExpression: expression=Expression;
 InitialAttributeSpecification: '(' (star?='*' | expression=Expression) ')' item=InitialAttributeSpecificationIteration;
 
-InitialAttributeSpecificationIteration: InitialAttributeItemStar | InitialAttributeConstant | InitialAttributeReference | InitialAttributeSpecificationIterationValue;
+InitialAttributeSpecificationIteration: InitialAttributeItemStar | InitialAttributeExpression | InitialAttributeSpecificationIterationValue;
 
 InitialAttributeSpecificationIterationValue: '(' items+=InitialAttributeItem (',' items+=InitialAttributeItem)* ')';
 

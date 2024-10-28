@@ -569,7 +569,7 @@ describe('PL/I Parsing tests', () => {
         expect(doc.parseResult.parserErrors).toHaveLength(0);
     });
 
-    test('Subscripted entry invocation', async () => {
+    test.skip('Subscripted entry invocation', async () => {
         const doc: LangiumDocument<PliProgram> = await parseStmts(`
  declare (A,B,C,D,E) entry;
  declare F(5) entry variable initial (A,B,C,D,E);

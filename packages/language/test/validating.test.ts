@@ -9,6 +9,7 @@
  *
  */
 
+import { describe, test } from "vitest";
 // import { beforeAll, describe, expect, test } from "vitest";
 // import { EmptyFileSystem, type LangiumDocument } from "langium";
 // import { expandToString as s } from "langium/generate";
@@ -30,7 +31,11 @@
 //     // await services.shared.workspace.WorkspaceManager.initializeWorkspace([]);
 // });
 // 
-// describe('Validating', () => {
+describe('Validating', () => {
+
+    test('empty test', () => {
+    });
+
 // 
 //     test('check no errors', async () => {
 //         document = await parse(`
@@ -60,7 +65,7 @@
 //             `)
 //         );
 //     });
-// });
+});
 // 
 // function checkDocumentValid(document: LangiumDocument): string | undefined {
 //     return document.parseResult.parserErrors.length && s`
