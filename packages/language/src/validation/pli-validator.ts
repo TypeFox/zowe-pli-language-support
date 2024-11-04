@@ -13,6 +13,7 @@ import type { ValidationChecks } from 'langium';
 import type { Pl1AstType } from '../generated/ast.js';
 import type { Pl1Services } from '../pli-module.js';
 import { IBM1295IE_sole_bound_specified } from './messages/IBM1295IE-sole-bound-specified.js';
+import { IBM1324IE_name_occurs_more_than_once_within_exports_clause } from './messages/IBM1324IE-name-occurs-more-than-once-within-exports-clause.js';
 
 /**
  * Register custom validation checks.
@@ -22,6 +23,7 @@ export function registerValidationChecks(services: Pl1Services) {
     const validator = services.validation.Pl1Validator;
     const checks: ValidationChecks<Pl1AstType> = {
         DimensionBound: [IBM1295IE_sole_bound_specified],
+        Exports: [IBM1324IE_name_occurs_more_than_once_within_exports_clause],
     };
     registry.register(checks, validator);
 }
