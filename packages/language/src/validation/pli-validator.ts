@@ -10,8 +10,9 @@
  */
 
 import type { ValidationChecks } from 'langium';
-import type { Pl1AstType } from './generated/ast.js';
-import type { Pl1Services } from './pli-module.js';
+import type { Pl1AstType } from '../generated/ast.js';
+import type { Pl1Services } from '../pli-module.js';
+import { IBM1295IE_sole_bound_specified } from './messages/IBM1295IE-sole-bound-specified.js';
 
 /**
  * Register custom validation checks.
@@ -20,6 +21,7 @@ export function registerValidationChecks(services: Pl1Services) {
     const registry = services.validation.ValidationRegistry;
     const validator = services.validation.Pl1Validator;
     const checks: ValidationChecks<Pl1AstType> = {
+        DimensionBound: [IBM1295IE_sole_bound_specified],
     };
     registry.register(checks, validator);
 }

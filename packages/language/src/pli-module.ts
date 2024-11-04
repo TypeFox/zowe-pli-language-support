@@ -12,7 +12,7 @@
 import { type Module, inject } from 'langium';
 import { createDefaultModule, createDefaultSharedModule, PartialLangiumSharedServices, type DefaultSharedModuleContext, type LangiumServices, type LangiumSharedServices, type PartialLangiumServices } from 'langium/lsp';
 import { Pl1GeneratedModule, Pl1GeneratedSharedModule } from './generated/module.js';
-import { Pl1Validator, registerValidationChecks } from './pli-validator.js';
+import { Pl1Validator, registerValidationChecks } from './validation/pli-validator.js';
 import { Pl1Lexer } from './parser/pli-lexer.js';
 import { PliTokenBuilder } from './parser/pli-token-builder.js';
 import { PliScopeComputation } from './references/pli-scope-computation.js';
