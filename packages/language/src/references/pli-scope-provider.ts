@@ -44,7 +44,9 @@ export class PliScopeProvider extends DefaultScopeProvider {
                 break;
             }
             if (childLevel === level + 1) {
-                result.push(...item.elements.filter(isDeclaredVariable));
+                if(isDeclaredVariable(item.element)) {
+                    result.push(item.element);
+                }
             }
         }
         return result;

@@ -503,7 +503,7 @@ InitialAttributeSpecificationIteration: InitialAttributeItemStar | InitialAttrib
 InitialAttributeSpecificationIterationValue: '(' items+=InitialAttributeItem (',' items+=InitialAttributeItem)* ')';
 
 DeclareStatement: ('DCL' | 'DECLARE' | xDeclare?='XDECLARE' | xDeclare?='XDCL') items+=DeclaredItem (',' items+=DeclaredItem)*  ';';
-DeclaredItem: level=NUMBER? (elements+=DeclaredVariable | elements+='*' | '(' items+=DeclaredItem (',' items+=DeclaredItem)* ')') attributes+=DeclarationAttribute*;
+DeclaredItem: level=NUMBER? (element=DeclaredVariable | element='*' | '(' items+=DeclaredItem (',' items+=DeclaredItem)* ')') attributes+=DeclarationAttribute*;
 
 type NamedElement = DeclaredVariable | DoType3Variable | ProcedureStatement;
 type NamedType = DefineAliasStatement;

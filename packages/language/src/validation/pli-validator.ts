@@ -14,6 +14,7 @@ import type { Pl1AstType } from '../generated/ast.js';
 import type { Pl1Services } from '../pli-module.js';
 import { IBM1295IE_sole_bound_specified } from './messages/IBM1295IE-sole-bound-specified.js';
 import { IBM1324IE_name_occurs_more_than_once_within_exports_clause } from './messages/IBM1324IE-name-occurs-more-than-once-within-exports-clause.js';
+import { IBM1388IE_NODESCRIPTOR_attribute_is_invalid_when_any_parameter_has_NONCONNECTED_attribute } from './messages/IBM1388IE-NODESCRIPTOR-attribute-is-invalid-when-any-parameter-has-NONCONNECTED-attribute.js';
 
 /**
  * Register custom validation checks.
@@ -24,6 +25,7 @@ export function registerValidationChecks(services: Pl1Services) {
     const checks: ValidationChecks<Pl1AstType> = {
         DimensionBound: [IBM1295IE_sole_bound_specified],
         Exports: [IBM1324IE_name_occurs_more_than_once_within_exports_clause],
+        ProcedureStatement: [IBM1388IE_NODESCRIPTOR_attribute_is_invalid_when_any_parameter_has_NONCONNECTED_attribute],
     };
     registry.register(checks, validator);
 }

@@ -37,4 +37,17 @@ describe('Error messages', () => {
             code: 'IBM1324IE'
         });
     });
+
+    test('IBM1388IE_NODESCRIPTOR attribute_is_invalid_when_any_parameter_has_NONCONNECTED_attribute', async () => {
+        const document = await parse(`
+0a: proc( x ) options(nodescriptor);
+  dcl x(20) fixed bin nonconnected;
+0end a;
+        `);
+        const diagnostics = document.diagnostics ?? [];
+        const result = { document, diagnostics, dispose: undefined! };
+        expectIssue(result, {
+            code: 'IBM1388IE'
+        });
+    });
 });
