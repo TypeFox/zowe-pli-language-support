@@ -50,4 +50,20 @@ describe('Error messages', () => {
             code: 'IBM1388IE'
         });
     });
+
+
+    test('IBM1747IS_Function_cannot_be_used_before_the_functions_descriptor_list_has_been_scanned', async () => {
+        const document = await parse(`
+            TEST: PROCEDURE OPTIONS(MAIN) REORDER;
+                dcl a char( csize( x, y ) );
+                dcl csize entry( char(2), fixed bin )
+                    returns( fixed bin );
+            END TEST;
+        `);
+        const diagnostics = document.diagnostics ?? [];
+        const result = { document, diagnostics, dispose: undefined! };
+        expectIssue(result, {
+            code: 'IBM1747IS'
+        });
+    });
 });
