@@ -14,7 +14,7 @@ grammar Pl1
 entry PliProgram:
     (statements+=TopLevelStatement)*;
 
-TopLevelStatement: Package | ProcedureStatement | Directives;
+TopLevelStatement: Package | PackageLevelStatements | Directives;
 
 Directives: SkipDirective | PopDirective | PushDirective | LineDirective | NoteDirective | PageDirective | PrintDirective | IncludeDirective | NoPrintDirective | ProcessDirective | ProcincDirective;
 

@@ -14,12 +14,8 @@ import { CancellationToken } from "vscode-languageserver";
 
 export class PliScopeComputation extends DefaultScopeComputation {
 
-    override computeExports(document: LangiumDocument, cancelToken?: CancellationToken): Promise<AstNodeDescription[]> {
-        if (document.uri.scheme === 'pli-builtin') {
-            return super.computeExports(document, cancelToken);
-        } else {
-            return Promise.resolve([]);
-        }
+    override async computeExports(document: LangiumDocument, cancelToken = CancellationToken.None): Promise<AstNodeDescription[]> {
+        return this.computeExportsForNode(document.parseResult.value, document, AstUtils.streamAllContents, cancelToken);
     }
 
     protected override processNode(node: AstNode, document: LangiumDocument, scopes: PrecomputedScopes): void {
