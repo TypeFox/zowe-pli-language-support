@@ -1,5 +1,3 @@
-
-
 import { ValidationAcceptor } from "langium";
 import { Bound } from "../../generated/ast";
 
