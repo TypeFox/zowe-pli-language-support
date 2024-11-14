@@ -24,6 +24,7 @@
     },
     "activationEvents": [],
     "main": "./out/extension/main.cjs",
+    "browser": "./out/extension/main-browser.js",
     "scripts": {
         "clean": "shx rm -fr *.tsbuildinfo out",
         "vscode:prepublish": "npm run build && node esbuild.mjs --minify",

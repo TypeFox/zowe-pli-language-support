@@ -37,7 +37,7 @@ const plugins = [{
     },
 }];
 
-const ctx = await esbuild.context({
+const nodeCtx = await esbuild.context({
     // Entry points for the vscode extension and the language server
     entryPoints: ['src/extension/main.ts', 'src/language/main.ts'],
     outdir: 'out',
@@ -57,9 +57,33 @@ const ctx = await esbuild.context({
     plugins
 });
 
+const browserCtx = await esbuild.context({
+    // Entry points for the vscode extension and the language server
+    entryPoints: ['src/extension/main-browser.ts', 'src/language/main-browser.ts'],
+    outdir: 'out',
+    bundle: true,
+    target: "ES2017",
+    format: 'cjs',
+    loader: { '.ts': 'ts' },
+    external: ['vscode'],
+    platform: 'browser',
+    sourcemap: !minify,
+    minify,
+    plugins
+});
+
 if (watch) {
-    await ctx.watch();
+    await Promise.all([
+        nodeCtx.watch(),
+        browserCtx.watch()
+    ]);
 } else {
-    await ctx.rebuild();
-    ctx.dispose();
+    await Promise.all([
+        nodeCtx.rebuild(),
+        browserCtx.rebuild()
+    ]);
+    await Promise.all([
+        nodeCtx.dispose(),
+        browserCtx.dispose()
+    ]);
 }
