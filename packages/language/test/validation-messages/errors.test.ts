@@ -13,16 +13,18 @@ describe('Error messages', () => {
         await services.shared.workspace.WorkspaceManager.initializeWorkspace([]);
     });
 
-    test('IBM1295IE Sole bound specified is less than 1', async () => {
-        const document = await parse(`
-            TEST: PROCEDURE OPTIONS(MAIN) REORDER;
-            dcl x(-5) fixed bin;    
-            END TEST;
-        `);
-        const diagnostics = document.diagnostics ?? [];
-        const result = { document, diagnostics, dispose: undefined! };
-        expectIssue(result, {
-            code: 'IBM1295IE'
+    describe('IBM1295IE Sole bound specified is less than 1', () => {
+        test.each([[-5], [0]])(`IBM1295IE: Upper bound is %d`, async (upperBound) => {
+            const document = await parse(`
+                TEST: PROCEDURE OPTIONS(MAIN) REORDER;
+                dcl x(${upperBound}) fixed bin;    
+                END TEST;
+            `);
+            const diagnostics = document.diagnostics ?? [];
+            const result = { document, diagnostics, dispose: undefined! };
+            expectIssue(result, {
+                code: 'IBM1295IE'
+            });
         });
     });
 

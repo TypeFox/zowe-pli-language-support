@@ -542,7 +542,13 @@ HandleAttribute: 'HANDLE' ('(' size=NUMBER ')')? (type=[NamedType:ID] | '(' type
 
 Dimensions: '(' (dimensions+=DimensionBound (',' dimensions+=DimensionBound)*)? ')';
 
-DimensionBound: lower=Bound (':' upper=Bound)?;
+/** 
+ * Attention! This naming has an explanation:
+ * - When only bound1 is given, it is the upper bound.
+ * - Otherwise bound1 is the lower and bound2 is the upper bound!
+ * Keep in mind, that `DimensionBound: upper=Bound | lower=Bound ':' upper=Bound;` is expensive because of the long common prefix.
+ */
+DimensionBound: bound1=Bound (':' bound2=Bound)?;
 
 Bound: (expression='*' | expression=Expression ('REFER' '(' refer=LocatorCall ')')?);
 
