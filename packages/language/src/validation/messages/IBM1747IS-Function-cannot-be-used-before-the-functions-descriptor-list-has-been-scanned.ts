@@ -3,24 +3,24 @@ import { isDeclaredVariable, isEntryAttribute, MemberCall } from "../../generate
 
 export function IBM1747IS_Function_cannot_be_used_before_the_functions_descriptor_list_has_been_scanned(call: MemberCall, accept: ValidationAcceptor): void {
     //member call points to variable declaration...
-    if(!isDeclaredVariable(call.element.ref.ref)) {
+    if (!isDeclaredVariable(call.element.ref.ref)) {
         return;
     }
     //...which actually is a function declaration...
     const declaration = call.element.ref.ref.$container;
-    if(!declaration.attributes.some(a => isEntryAttribute(a) && a.returns)) {
+    if (!declaration.attributes.some(a => isEntryAttribute(a) && a.returns)) {
         return;
     }
     //... where both function call and function declaration are in the same file...
     const callDocument = AstUtils.getDocument(call);
     const declarationDocument = AstUtils.getDocument(declaration);
-    if(callDocument !== declarationDocument) {
+    if (callDocument !== declarationDocument) {
         return;
     }
     //...and the declaration happens after the call
     const callOffset = call.$cstNode!.offset;
     const declarationOffset = declaration.$cstNode!.offset;
-    if(callOffset > declarationOffset) {
+    if (callOffset > declarationOffset) {
         return;
     }
     //throw error
