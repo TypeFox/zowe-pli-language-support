@@ -9,8 +9,8 @@
  *
  */
 
-import type { ValidationChecks } from 'langium';
-import type { Pl1AstType } from '../generated/ast.js';
+import type { MaybePromise, ValidationAcceptor, ValidationChecks } from 'langium';
+import { Pl1AstType, SimpleOptionsItem } from '../generated/ast.js';
 import type { Pl1Services } from '../pli-module.js';
 import { IBM1295IE_sole_bound_specified } from './messages/IBM1295IE-sole-bound-specified.js';
 import { IBM1324IE_name_occurs_more_than_once_within_exports_clause } from './messages/IBM1324IE-name-occurs-more-than-once-within-exports-clause.js';
@@ -28,13 +28,37 @@ export function registerValidationChecks(services: Pl1Services) {
         Exports: [IBM1324IE_name_occurs_more_than_once_within_exports_clause],
         MemberCall: [IBM1747IS_Function_cannot_be_used_before_the_functions_descriptor_list_has_been_scanned],
         ProcedureStatement: [IBM1388IE_NODESCRIPTOR_attribute_is_invalid_when_any_parameter_has_NONCONNECTED_attribute],
+
+        SimpleOptionsItem: [validator.checkOptionUnderValidParent]
     };
     registry.register(checks, validator);
 }
+
+const undocumentedOptions = ['INTER', 'RECURSIVE'] as const;
+const optionsMap: Partial<Record<keyof Pl1AstType, SimpleOptionsItem['value'][]>> = {
+    BeginStatement: ['NOCHARGRAPHIC', 'CHARGRAPHIC', 'NOINLINE', 'INLINE', 'NORETURN', 'ORDER', 'REORDER'],
+    EntryAttribute: ['ASSEMBLER', 'ASM', 'RETCODE', 'COBOL', 'FORTRAN', 'FETCHABLE', 'RENT', 'BYADDR', 'BYVALUE', 'DESCRIPTOR', 'NODESCRIPTOR', 'AMODE31', 'AMODE64', 'IRREDUCIBLE', 'REDUCIBLE', 'NORETURN', ...undocumentedOptions],
+    EntryStatement: ['ASSEMBLER', 'ASM', 'RETCODE', 'REENTRANT', 'COBOL', 'FORTRAN', 'BYADDR', 'BYVALUE', 'DESCRIPTOR', 'NODESCRIPTOR', 'DLLINTERNAL', 'IRREDUCIBLE', 'REDUCIBLE', 'NORETURN'],
+    Package: ['NOCHARGRAPHIC', 'CHARGRAPHIC', 'ORDER', 'REORDER', 'REENTRANT'],
+    ProcedureStatement: ['ASSEMBLER', 'ASM', 'COBOL', 'FORTRAN', 'FETCHABLE', 'FETCHABLE', 'MAIN', 'NOEXECOPS', 'BYADDR', 'BYVALUE', 'NOCHARGRAPHIC', 'CHARGRAPHIC', 'DESCRIPTOR', 'NODESCRIPTOR', 'AMODE31', 'AMODE64', 'DLLINTERNAL', 'FROMALIEN', 'NOINLINE', 'INLINE', 'ORDER', 'REORDER', 'IRREDUCIBLE', 'REDUCIBLE', 'NORETURN', 'REENTRANT', 'RETCODE', 'WINMAIN', ...undocumentedOptions]
+};
 
 /**
  * Implementation of custom validations.
  */
 export class Pl1Validator {
-
+    checkOptionUnderValidParent(node: SimpleOptionsItem, accept: ValidationAcceptor): MaybePromise<void> {
+        const optionsParent = node.$container.$container.$type;
+        if(optionsParent in optionsMap) {
+            const validValues = optionsMap[optionsParent]!;
+            if(!validValues.includes(node.value)) {
+                accept('error', `Option '${node.value}' is not allowed within the '${optionsParent}}' node.`, {
+                    node: node,
+                    property: 'value'
+                });
+            }
+        }
+    }    
 }
+
+
