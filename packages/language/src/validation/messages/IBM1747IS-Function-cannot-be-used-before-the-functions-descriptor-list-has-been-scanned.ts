@@ -1,6 +1,11 @@
 import { AstUtils, ValidationAcceptor } from "langium";
 import { isDeclaredVariable, isEntryAttribute, MemberCall } from "../../generated/ast";
 
+/**
+ * This validation addresses functions, not procedures.
+ * TODO check if also procedures are affected
+ * @see https://www.ibm.com/docs/en/epfz/6.1?topic=codes-compiler-severe-messages-1500-2399#ibm1747i__msgId__1
+ */
 export function IBM1747IS_Function_cannot_be_used_before_the_functions_descriptor_list_has_been_scanned(call: MemberCall, accept: ValidationAcceptor): void {
     //member call points to variable declaration...
     if (!isDeclaredVariable(call.element.ref.ref)) {
