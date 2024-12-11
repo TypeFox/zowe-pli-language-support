@@ -9,21 +9,31 @@
  *
  */
 
-import { AstNode, DefaultLangiumDocumentFactory, LangiumDocument, ParseResult, TextDocument, URI } from "langium";
-import { CompilerOptions } from "../compiler/options";
+import { AstNode, DefaultLangiumDocumentFactory, LangiumDocument, Mutable, ParseResult, TextDocument, URI } from "langium";
+import { CompilerOptionResult } from "../compiler/options";
 import type { PliServices } from "../pli-module";
+import { PliProgram } from "../generated/ast";
+import { CancellationToken } from "vscode-languageserver";
 
-export interface PliDocument<T extends AstNode> extends LangiumDocument<T> {
-    compilerOptions: CompilerOptions;
+export interface PliDocument extends LangiumDocument<PliProgram> {
+    compilerOptions: CompilerOptionResult;
 }
 
 export class PliDocumentFactory extends DefaultLangiumDocumentFactory {
 
     protected override createLangiumDocument<T extends AstNode = AstNode>(parseResult: ParseResult<T>, uri: URI, textDocument?: TextDocument, text?: string): LangiumDocument<T> {
-        const document = super.createLangiumDocument(parseResult, uri, textDocument, text) as unknown as PliDocument<T>;
+        const document = super.createLangiumDocument(parseResult, uri, textDocument, text) as unknown as PliDocument;
         const lexer = (this.serviceRegistry.getServices(uri) as PliServices).parser.Lexer;
         document.compilerOptions = lexer.compilerOptions;
-        return document;
+        return document as unknown as LangiumDocument<T>;
+    }
+
+    override async update<T extends AstNode = AstNode>(document: Mutable<LangiumDocument<T>>, cancellationToken: CancellationToken): Promise<LangiumDocument<T>> {
+        const updatedDocument = await super.update(document, cancellationToken);
+        const pliDocument = updatedDocument as unknown as PliDocument;
+        const lexer = (this.serviceRegistry.getServices(updatedDocument.uri) as PliServices).parser.Lexer;
+        pliDocument.compilerOptions = lexer.compilerOptions;
+        return pliDocument as unknown as LangiumDocument<T>;
     }
 
 }

@@ -9,8 +9,10 @@
  *
  */
 
-import { CompilerOptions } from "./options";
-import { AbstractCompilerOption, AbstractCompilerOptions, AbstractCompilerOptionString, AbstractCompilerOptionText, AbstractCompilerValue, isAbstractCompilerOption, isAbstractCompilerOptionString, isAbstractCompilerOptionText } from "./parser";
+import { IToken } from "chevrotain";
+import { CompilerOptionIssue, CompilerOptionResult, CompilerOptions } from "./options";
+import { AbstractCompilerOption, AbstractCompilerOptions, AbstractCompilerOptionString, AbstractCompilerOptionText, AbstractCompilerValue, isAbstractCompilerOption, isAbstractCompilerOptionString, isAbstractCompilerOptionText, tokenToRange } from "./parser";
+import { DiagnosticSeverity } from "vscode-languageserver-types";
 
 interface TranslatorRule {
     positive?: string[];
@@ -24,6 +26,7 @@ type Translate = (option: AbstractCompilerOption, options: CompilerOptions) => v
 class Translator {
 
     options: CompilerOptions = {};
+    issues: CompilerOptionIssue[] = [];
 
     private rules: TranslatorRule[] = [];
 
@@ -45,15 +48,44 @@ class Translator {
                 }
             }
         } catch (err) {
-            // this is fine
+            // We create a new diagnostic for the error
+            if (err instanceof TranslationError) {
+                this.issues.push({
+                    range: tokenToRange(option.token),
+                    message: err.message,
+                    severity: err.severity
+                });
+            } else {
+                throw err;
+            }
+            
         }
     }
 
 }
 
-function ensureArguments(values: AbstractCompilerValue[], min: number, max: number) {
-    if (values.length < min || values.length > max) {
-        throw new Error(`Expected between ${min} and ${max} arguments, got ${values.length}`);
+class TranslationError {
+
+    token: IToken;
+    message: string;
+    severity: DiagnosticSeverity;
+
+    constructor(token: IToken, message: string, severity: DiagnosticSeverity) {
+        this.token = token;
+        this.message = message;
+        this.severity = severity;
+    }
+}
+
+function ensureArguments(option: AbstractCompilerOption, min: number, max: number) {
+    if (option.values.length < min || option.values.length > max) {
+        let message: string;
+        if (min === max) {
+            message = `Expected ${min} arguments, but received ${option.values.length}.`;
+        } else {
+            message = `Expected between ${min} and ${max} arguments, but received ${option.values.length}.`;
+        }
+        throw new TranslationError(option.token, message, 1);
     }
 }
 
@@ -79,7 +111,7 @@ function ensureType(value: AbstractCompilerValue, type: string): void {
         received = 'empty';
     }
     if (type !== received) {
-        throw new Error(`Expected a ${type}, got ${received}`);
+        throw new TranslationError(value.token, `Expected a ${type}, received ${received}.`, 1);
     }
 }
 
@@ -87,7 +119,7 @@ const translator = new Translator();
 
 function stringTranslate(callback: (options: CompilerOptions, value: string) => void): Translate {
     return (option, options) => {
-        ensureArguments(option.values, 1, 1);
+        ensureArguments(option, 1, 1);
         const value = option.values[0];
         ensureType(value, 'string');
         callback(options, value.value);
@@ -96,11 +128,11 @@ function stringTranslate(callback: (options: CompilerOptions, value: string) => 
 
 function plainTranslate(callback: (options: CompilerOptions, value: string) => void, ...values: string[]): Translate {
     return (option, options) => {
-        ensureArguments(option.values, 1, 1);
+        ensureArguments(option, 1, 1);
         const value = option.values[0];
         ensureType(value, 'plain');
         if (values.length > 0 && !values.includes(value.value)) {
-            throw new Error(`Expected one of ${values.join(', ')}. Received '${value.value}'`);
+            throw new TranslationError(value.token, `Expected one of '${values.join("', '")}', but received '${value.value}'.`, 1);
         }
         callback(options, value.value);
     };
@@ -110,7 +142,7 @@ function plainTranslate(callback: (options: CompilerOptions, value: string) => v
 translator.rule(
     ['AGGREGATE', 'AG'],
     (option, options) => {
-        ensureArguments(option.values, 0, 1);
+        ensureArguments(option, 0, 1);
         const value = option.values[0];
         if (value) {
             ensureType(value, 'plain');
@@ -120,7 +152,7 @@ translator.rule(
                     offsets: text
                 }
             } else {
-                throw new Error('Invalid aggregate value. Expected DECIMAL or HEXADEC');
+                throw new TranslationError(value.token, 'Invalid aggregate value. Expected DECIMAL or HEXADEC', 1);
             }
         }
     },
@@ -142,7 +174,7 @@ translator.rule(['ASSERT'], plainTranslate((options, value) => {
 
 /** {@link CompilerOptions.attributes} */
 translator.rule(['ATTRIBUTES', 'A', 'NOATTRIBUTES', 'NA'], (option, options) => {
-    ensureArguments(option.values, 0, 1);
+    ensureArguments(option, 0, 1);
     const include = option.name.startsWith('A');
     let identifiers: 'FULL' | 'SHORT' | undefined = undefined;
     const value = option.values[0];
@@ -211,10 +243,10 @@ translator.rule(['CASE'], plainTranslate((options, value) => {
 
 /** {@link CompilerOptions.caserules} */
 translator.rule(['CASERULES'], (option, options) => {
-    ensureArguments(option.values, 1, 1);
+    ensureArguments(option, 1, 1);
     const keyword = option.values[0];
     ensureType(keyword, 'option');
-    ensureArguments(keyword.values, 1, 1);
+    ensureArguments(keyword, 1, 1);
     const keywordCase = keyword.values[0];
     ensureType(keywordCase, 'plain');
     options.caserules = keywordCase.value as CompilerOptions.CaseRules;
@@ -262,7 +294,7 @@ translator.rule(
     },
     ['NOCOMPILE', 'NC'],
     (option, options) => {
-        ensureArguments(option.values, 0, 1);
+        ensureArguments(option, 0, 1);
         const severity = option.values[0];
         let sev: CompilerOptions.Compile['severity'] | undefined;
         if (severity) {
@@ -286,7 +318,7 @@ translator.rule(
 
 /** {@link CompilerOptions.margins} */
 translator.rule(['MARGINS', 'MAR'], (option, options) => {
-    ensureArguments(option.values, 2, 3);
+    ensureArguments(option, 2, 3);
     const m = option.values[0];
     const n = option.values[1];
     const c = option.values[2];
@@ -318,10 +350,14 @@ translator.rule(['NOT'], stringTranslate((options, value) => {
     options.not = value;
 }));
 
-export function translateCompilerOptions(input: AbstractCompilerOptions): CompilerOptions {
+export function translateCompilerOptions(input: AbstractCompilerOptions): CompilerOptionResult {
     translator.options = {};
+    translator.issues = [...input.issues];
     for (const option of input.options) {
         translator.translate(option);
     }
-    return translator.options;
+    return {
+        options: translator.options,
+        issues: translator.issues
+    }
 }

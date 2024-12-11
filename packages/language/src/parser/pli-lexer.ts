@@ -10,7 +10,7 @@
  */
 
 import { DefaultLexer, LexerResult } from "langium";
-import { CompilerOptions } from "../compiler/options";
+import { CompilerOptionResult } from "../compiler/options";
 import { parseAbstractCompilerOptions } from "../compiler/parser";
 import { translateCompilerOptions } from "../compiler/translator";
 import { PliTokenBuilder } from "./pli-token-builder";
@@ -19,15 +19,18 @@ const NEWLINE = '\n'.charCodeAt(0);
 
 export class PliLexer extends DefaultLexer {
 
-    compilerOptions: CompilerOptions = {};
+    compilerOptions: CompilerOptionResult = {
+        issues: [],
+        options: {}
+    };
 
     protected override readonly tokenBuilder!: PliTokenBuilder;
 
     override tokenize(text: string): LexerResult {
         const lines = this.splitLines(text);
         this.fillCompilerOptions(lines);
-        this.tokenBuilder.or = this.compilerOptions.or || '|';
-        this.tokenBuilder.not = this.compilerOptions.not || '¬';
+        this.tokenBuilder.or = this.compilerOptions.options.or || '|';
+        this.tokenBuilder.not = this.compilerOptions.options.not || '¬';
         const adjustedLines = lines.map(line => this.adjustLine(line));
         const adjustedText = adjustedLines.join('');
         return super.tokenize(adjustedText);
@@ -45,54 +48,72 @@ export class PliLexer extends DefaultLexer {
         return lines;
     }
 
-    private fillCompilerOptions(lines: string[]): CompilerOptions {
+    private fillCompilerOptions(lines: string[]): CompilerOptionResult {
         const max = Math.min(lines.length, 100);
+        let fullText = '';
         for (let i = 0; i < max; i++) {
             const line = lines[i];
-            if (line.includes('*PROCESS')) {
-                const startChar = line.indexOf('*PROCESS');
-                let endChar = line.lastIndexOf(';', startChar);
+            const { length, eol } = this.getLineInfo(line);
+            const process = '*PROCESS';
+            if (line.includes(process)) {
+                const startChar = line.indexOf(process);
+                const startParseChar = startChar + process.length;
+                let endChar = line.lastIndexOf(';');
                 if (endChar < 0) {
-                    // Ensure we keep the correct line ending
-                    if (line.endsWith('\r\n')) {
-                        endChar = line.length - 2;
-                    } else if (line.endsWith('\n')) {
-                        endChar = line.length - 1;
-                    } else {
-                        endChar = line.length;
-                    }
+                    endChar = length;
                 }
-                const compilerOptionsText = line.substring(startChar + '*PROCESS'.length, endChar);
-                const parsed = parseAbstractCompilerOptions(compilerOptionsText);
+                const compilerOptionsText = line.substring(startParseChar, endChar);
+                fullText += ' '.repeat(startParseChar) + compilerOptionsText;
+                const parsed = parseAbstractCompilerOptions(fullText);
                 this.compilerOptions = translateCompilerOptions(parsed);
-                const newText = line.substring(0, startChar) + ' '.repeat(endChar - startChar) + line.substring(endChar);
+                const newText = ' '.repeat(length) + eol;
                 lines[i] = newText;
                 return this.compilerOptions;
+            } else {
+                fullText += ' '.repeat(length) + eol;
             }
         }
-        this.compilerOptions = {};
+        this.compilerOptions = {
+            issues: [],
+            options: {}
+        };
         return this.compilerOptions;
     }
 
     private adjustLine(line: string): string {
-        let eol = '';
-        if (line.endsWith('\r\n')) {
-            eol = '\r\n';
-        } else if (line.endsWith('\n')) {
-            eol = '\n';
-        }
+        const { length, eol } = this.getLineInfo(line);
         const prefixLength = 1;
-        const lineLength = line.length - eol.length;
-        if (lineLength < prefixLength) {
-            return ' '.repeat(lineLength) + eol;
+        if (length < prefixLength) {
+            return ' '.repeat(length) + eol;
         }
         const lineEnd = 72;
         const prefix = ' '.repeat(prefixLength);
         let postfix = '';
-        if (lineLength > lineEnd) {
-            postfix = ' '.repeat(lineLength - lineEnd);
+        if (length > lineEnd) {
+            postfix = ' '.repeat(length - lineEnd);
         }
-        return prefix + line.substring(prefixLength, Math.min(lineEnd, lineLength)) + postfix + eol;
+        return prefix + line.substring(prefixLength, Math.min(lineEnd, length)) + postfix + eol;
     }
 
+    private getLineInfo(text: string): LineInfo {
+        let eol = '';
+        let length = text.length;
+        if (text.endsWith('\r\n')) {
+            eol = '\r\n';
+            length -= 2;
+        } else if (text.endsWith('\n')) {
+            eol = '\n';
+            length -= 1;
+        }
+        return {
+            eol,
+            length
+        };
+    }
+
+}
+
+interface LineInfo {
+    eol: string;
+    length: number;
 }

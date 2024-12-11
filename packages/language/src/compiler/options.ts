@@ -9,6 +9,19 @@
  *
  */
 
+import { Range, DiagnosticSeverity } from "vscode-languageserver-types";
+
+export interface CompilerOptionResult {
+    options: CompilerOptions;
+    issues: CompilerOptionIssue[];
+}
+
+export interface CompilerOptionIssue {
+    severity: DiagnosticSeverity;
+    message: string;
+    range: Range;
+}
+
 /**
  * https://www.ibm.com/docs/en/epfz/6.1?topic=facilities-compile-time-option-descriptions
  */

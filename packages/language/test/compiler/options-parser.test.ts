@@ -74,33 +74,33 @@ describe('CompilerOptions translator', () => {
 
     test('Translates MARGINS #1', () => {
         const options = parseAbstractCompilerOptions('MARGINS(4, 80)');
-        const translated = translateCompilerOptions(options);
+        const translated = translateCompilerOptions(options).options;
         expect(translated.margins).toEqual({ m: 4, n: 80 });
     });
 
     test('Translates MARGINS #2', () => {
         const options = parseAbstractCompilerOptions('MARGINS(4,)');
-        const translated = translateCompilerOptions(options);
+        const translated = translateCompilerOptions(options).options;
         expect(translated.margins).toEqual({ m: 4, n: NaN });
     });
 
     test('Translates MARGINS - negative', () => {
         // Margins requires two or three arguments
         const options = parseAbstractCompilerOptions('MARGINS(4)');
-        const translated = translateCompilerOptions(options);
+        const translated = translateCompilerOptions(options).options;
         // If the parsing fails, the option is not set
         expect(translated.margins).toBeUndefined();
     });
 
     test('Translates MARGINS #3', () => {
         const options = parseAbstractCompilerOptions('MARGINS(0, 14,)');
-        const translated = translateCompilerOptions(options);
+        const translated = translateCompilerOptions(options).options;
         expect(translated.margins).toEqual({ m: 0, n: 14, c: '' });
     });
 
     test('Translates MARGINS #4', () => {
         const options = parseAbstractCompilerOptions('NOMARGINS');
-        const translated = translateCompilerOptions(options);
+        const translated = translateCompilerOptions(options).options;
         expect(translated.margins).toEqual(false);
     });
 

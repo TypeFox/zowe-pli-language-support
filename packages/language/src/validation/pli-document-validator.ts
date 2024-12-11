@@ -10,7 +10,9 @@
  */
 
 import { AstNode, DefaultDocumentValidator, DiagnosticInfo, DocumentValidator, LangiumDocument, LinkingErrorData, ValidationOptions } from "langium";
+import { CancellationToken } from "vscode-languageserver";
 import { Diagnostic } from "vscode-languageserver-types";
+import { PliDocument } from "../workspace/pli-documents";
 
 export class PliDocumentValidator extends DefaultDocumentValidator {
 
@@ -32,6 +34,20 @@ export class PliDocumentValidator extends DefaultDocumentValidator {
                 diagnostics.push(this.toDiagnostic('warning', linkingError.message, info));
             }
         }
+    }
+
+    override async validateDocument(document: LangiumDocument, options?: ValidationOptions, cancelToken?: CancellationToken): Promise<Diagnostic[]> {
+        const diagnostics = await super.validateDocument(document, options, cancelToken);
+        const pliDocument = document as PliDocument;
+        const compilerOptions = pliDocument.compilerOptions;
+        for (const issue of compilerOptions.issues) {
+            diagnostics.push({
+                severity: issue.severity,
+                range: issue.range,
+                message: issue.message
+            });
+        }
+        return diagnostics;
     }
 
 }

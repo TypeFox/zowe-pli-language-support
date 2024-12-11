@@ -10,6 +10,8 @@
  */
 
 import { createToken, EmbeddedActionsParser, IToken, Lexer } from 'chevrotain';
+import { CompilerOptionIssue } from './options';
+import { Range } from 'vscode-languageserver-types';
 
 const commaToken = createToken({ name: 'comma', pattern: ',' });
 const stringToken = createToken({ name: 'string', pattern: /'([^'\\]|\\.)*'/ });
@@ -29,7 +31,7 @@ class Parser extends EmbeddedActionsParser {
         this.performSelfAnalysis();
     }
 
-    compilerOptions = this.RULE<() => AbstractCompilerOptions>('compilerOptions', () => {
+    compilerOptions = this.RULE<() => Omit<AbstractCompilerOptions, 'issues'>>('compilerOptions', () => {
         const options: AbstractCompilerOption[] = [];
         this.MANY_SEP({
             SEP: commaToken,
@@ -44,7 +46,7 @@ class Parser extends EmbeddedActionsParser {
                 }
                 options.push(result);
             }
-        })
+        });
         return {
             options
         };
@@ -125,6 +127,7 @@ const parser = new Parser();
 
 export interface AbstractCompilerOptions {
     options: AbstractCompilerOption[];
+    issues: CompilerOptionIssue[];
 }
 
 export interface AbstractCompilerOption {
@@ -163,5 +166,47 @@ export function parseAbstractCompilerOptions(input: string): AbstractCompilerOpt
     const tokens = lexer.tokenize(input);
     parser.input = tokens.tokens;
     const compilerOptions = parser.compilerOptions();
-    return compilerOptions;
+    const issues: CompilerOptionIssue[] = [];
+    for (const lexerError of tokens.errors) {
+        issues.push({
+            message: lexerError.message,
+            range: {
+                start: {
+                    line: lexerError.line! - 1,
+                    character: lexerError.column! - 1
+                },
+                end: {
+                    line: lexerError.line! - 1,
+                    character: lexerError.column! + lexerError.length! - 1
+                }
+            },
+            severity: 1
+        });
+    }
+    for (const parserError of parser.errors) {
+        issues.push({
+            message: parserError.message,
+            range: tokenToRange(parserError.token),
+            severity: 1
+        });
+    }
+    return {
+        options: compilerOptions.options,
+        issues
+    };
+}
+
+export function tokenToRange(token: IToken): Range {
+    // Chevrotain uses 1-based indices everywhere
+    // So we subtract 1 from every value to align with the LSP
+    return {
+        start: {
+            character: token.startColumn! - 1,
+            line: token.startLine! - 1
+        },
+        end: {
+            character: token.endColumn!, // endColumn uses the correct index
+            line: token.endLine! - 1
+        }
+    };
 }
