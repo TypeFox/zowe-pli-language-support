@@ -39,6 +39,7 @@ class Parser extends EmbeddedActionsParser {
                 let result = this.SUBRULE(this.compilerOption);
                 if (isAbstractCompilerOptionText(result)) {
                     result = {
+                        type: 'option',
                         name: result.value,
                         token: result.token,
                         values: []
@@ -73,6 +74,7 @@ class Parser extends EmbeddedActionsParser {
         });
         if (parenthesis) {
             return {
+                type: 'option',
                 name: nameToken.image,
                 token: nameToken,
                 values
@@ -132,6 +134,7 @@ export interface AbstractCompilerOptions {
 
 export interface AbstractCompilerOption {
     name: string;
+    type: 'option';
     token: IToken;
     values: AbstractCompilerValue[];
 }

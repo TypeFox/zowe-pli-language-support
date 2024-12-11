@@ -34,6 +34,21 @@ class Translator {
         this.rules.push({ positive, negative, positiveTranslate, negativeTranslate });
     }
 
+    flag(key: keyof CompilerOptions, positive: string[], negative: string[]) {
+        this.rules.push({
+            positive,
+            positiveTranslate: (option, options) => {
+                ensureArguments(option, 0, 0);
+                (options as any)[key] = true;
+            },
+            negative,
+            negativeTranslate: (option, options) => {
+                ensureArguments(option, 0, 0);
+                (options as any)[key] = false;
+            }
+        })
+    }
+
     translate(option: AbstractCompilerOption) {
         const name = option.name.toUpperCase();
         try {
@@ -117,16 +132,16 @@ function ensureType(value: AbstractCompilerValue, type: string): void {
 
 const translator = new Translator();
 
-function stringTranslate(callback: (options: CompilerOptions, value: string) => void): Translate {
+function stringTranslate(callback: (options: CompilerOptions, value: AbstractCompilerOptionString) => void): Translate {
     return (option, options) => {
         ensureArguments(option, 1, 1);
         const value = option.values[0];
         ensureType(value, 'string');
-        callback(options, value.value);
+        callback(options, value);
     };
 };
 
-function plainTranslate(callback: (options: CompilerOptions, value: string) => void, ...values: string[]): Translate {
+function plainTranslate(callback: (options: CompilerOptions, value: AbstractCompilerOptionText) => void, ...values: string[]): Translate {
     return (option, options) => {
         ensureArguments(option, 1, 1);
         const value = option.values[0];
@@ -134,7 +149,7 @@ function plainTranslate(callback: (options: CompilerOptions, value: string) => v
         if (values.length > 0 && !values.includes(value.value)) {
             throw new TranslationError(value.token, `Expected one of '${values.join("', '")}', but received '${value.value}'.`, 1);
         }
-        callback(options, value.value);
+        callback(options, value);
     };
 };
 
@@ -169,7 +184,7 @@ translator.rule(['ARCH'], plainTranslate((options, value) => {
 
 /** {@link CompilerOptions.assert} */
 translator.rule(['ASSERT'], plainTranslate((options, value) => {
-    options.assert = value as CompilerOptions.Assert;
+    options.assert = value.value as CompilerOptions.Assert;
 }, 'ENTRY', 'CONDITION'));
 
 /** {@link CompilerOptions.attributes} */
@@ -207,38 +222,29 @@ translator.rule(['BIFPREC'], plainTranslate((options, value) => {
 
 /** {@link CompilerOptions.blank} */
 translator.rule(['BIFPREC'], stringTranslate((options, value) => {
-    options.blank = value;
+    options.blank = value.value;
 }));
 
 /** {@link CompilerOptions.blkoff} */
-translator.rule(
-    ['BLKOFF'],
-    (_, options) => {
-        options.blkoff = true;
-    },
-    ['NOBLKOFF'],
-    (_, options) => {
-        options.blkoff = false;
-    }
-);
+translator.flag('blkoff', ['BLKOFF'], ['NOBLKOFF']);
 
 /** {@link CompilerOptions.brackets} */
 translator.rule(
     ['BRACKETS'],
     stringTranslate((options, value) => {
-        const length = value.length;
+        const length = value.value.length;
         if (length !== 2) {
             throw new Error('Expected two characters');
         }
-        const start = value.charAt(0);
-        const end = value.charAt(1);
+        const start = value.value.charAt(0);
+        const end = value.value.charAt(1);
         options.brackets = [start, end];
     })
 );
 
 /** {@link CompilerOptions.case} */
 translator.rule(['CASE'], plainTranslate((options, value) => {
-    options.case = value as CompilerOptions.Case;
+    options.case = value.value as CompilerOptions.Case;
 }, 'UPPER', 'ASIS'));
 
 /** {@link CompilerOptions.caserules} */
@@ -254,39 +260,31 @@ translator.rule(['CASERULES'], (option, options) => {
 
 /** {@link CompilerOptions.check} */
 translator.rule(['CHECK'], plainTranslate((options, value) => {
-    if (value === 'STG') {
-        value = 'STORAGE';
-    } else if (value === 'NSTG') {
-        value = 'NOSTORAGE';
+    let text = value.value;
+    if (text === 'STG') {
+        text = 'STORAGE';
+    } else if (text === 'NSTG') {
+        text = 'NOSTORAGE';
     }
     options.check = {
-        storage: value as 'STORAGE' | 'NOSTORAGE'
+        storage: text as 'STORAGE' | 'NOSTORAGE'
     };
 }, 'STORAGE', 'STG', 'NOSTORAGE', 'NSTG'));
 
 /** {@link CompilerOptions.cmpat} */
 translator.rule(['CMPAT', 'CMP'], plainTranslate((options, value) => {
-    options.cmpat = value as CompilerOptions.CMPat;
+    options.cmpat = value.value as CompilerOptions.CMPat;
 }, 'V1', 'V2', 'V3', 'LE'));
 
 /** {@link CompilerOptions.codepage} */
 translator.rule(['CODEPAGE'], plainTranslate((options, value) => {
-    options.codepage = value;
+    options.codepage = value.value;
 }));
 
 /** {@link CompilerOptions.common} */
-translator.rule(
-    ['COMMON'],
-    (_, options) => {
-        options.common = true;
-    },
-    ['NOCOMMON'],
-    (_, options) => {
-        options.common = false;
-    }
-);
+translator.flag('common', ['COMMON'], ['NOCOMMON']);
 
-/** {@link CompilerOptions.common} */
+/** {@link CompilerOptions.compile} */
 translator.rule(
     ['COMPILE', 'C'],
     (_, options) => {
@@ -307,7 +305,7 @@ translator.rule(
             } else if (value === 'E') {
                 sev = 'ERROR';
             } else {
-                throw new Error('Invalid severity value. Expected S, W or E');
+                throw new TranslationError(severity.token, `Invalid severity value. Expected S, W or E, but received '${value}'`, 1);
             }
         }
         options.compile = {
@@ -315,6 +313,336 @@ translator.rule(
         };
     }
 );
+
+/** {@link CompilerOptions.copyright} */
+translator.rule(
+    ['COPYRIGHT'],
+    (option, options) => {
+        ensureArguments(option, 1, 1);
+        const valueOption = option.values[0];
+        ensureType(valueOption, 'string');
+        options.copyright = valueOption.value;
+    },
+    ['NOCOPYRIGHT'],
+    (_, options) => {
+        options.copyright = false;
+    }
+);
+
+/** {@link CompilerOptions.csect} */
+translator.flag('csect', ['CSECT'], ['NOCSECT']);
+
+/** {@link CompilerOptions.csectcut} */
+translator.rule(['CSECTCUT'], plainTranslate((options, value) => {
+    if (!['0', '1', '2', '3', '4', '5', '6', '7'].includes(value.value)) {
+        throw new TranslationError(value.token, `Invalid csectcut value. Expected a number between 0 and 7, but received '${value.value}'.`, 1);
+    }
+    options.csectcut = Number(value);
+}));
+
+/** {@link CompilerOptions.currency} */
+translator.rule(['CURRENCY'], stringTranslate((options, value) => {
+    if (value.value.length === 0) {
+        throw new TranslationError(value.token, 'Currency character required', 1);
+    } else if (value.value.length > 1) {
+        throw new TranslationError(value.token, `Currency character must be a single character, but received '${value.value}'.`, 1);
+    }
+    options.currency = value.value;
+}));
+
+/** {@link CompilerOptions.dbcs} */
+translator.flag('dbcs', ['DBCS'], ['NODBCS']);
+
+/** {@link CompilerOptions.dbrmlib} */
+translator.rule(
+    ['DBRMLIB'], 
+    (option, options) => {
+        ensureArguments(option, 0, 1);
+        const dataSetName = option.values[0];
+        ensureType(dataSetName, 'string');
+        options.dbrmlib = dataSetName.value;
+    },
+    ['NODBRMLIB'],
+    (_, options) => {
+        options.dbrmlib = false;
+    }
+);
+/** {@link CompilerOptions.dd} */
+translator.rule(['DD'], (option, options) => {
+    ensureArguments(option, 0, 8);
+    options.dd = {};
+    const dd = [
+        'sysprint',
+        'sysin',
+        'syslib',
+        'syspunch',
+        'syslin',
+        'sysadata',
+        'sysxmlsd',
+        'sysdebug'
+    ] as const;
+    for (let i = 0; i < option.values.length; i++) {
+        const value = option.values[i];
+        ensureType(value, 'plain');
+        options.dd[dd[i]] = value.value;
+    }
+});
+
+/** {@link CompilerOptions.ddsql} */
+translator.rule(['DDSQL'], (option, options) => {
+    ensureArguments(option, 1, 1);
+    const value = option.values[0];
+    ensureType(value, 'plainOrString');
+    options.ddsql = value.value;
+});
+
+/** {@link CompilerOptions.decimal} */
+translator.rule(['DECIMAL'], (option, options) => {
+    options.decimal = {};
+    for (const opt of option.values) {
+        ensureType(opt, 'plain');
+        const value = opt.value;
+        switch (value) {
+            case 'CHECKFLOAT':
+                options.decimal.checkfloat = true;
+                break;
+            case 'NOCHECKFLOAT':
+                options.decimal.checkfloat = false;
+                break;
+            case 'FOFLONADD':
+                options.decimal.foflonadd = true;
+                break;
+            case 'NOFOFLONADD':
+                options.decimal.foflonadd = false;
+                break;
+            case 'FOFLONASGN':
+                options.decimal.foflonasgn = true;
+                break;
+            case 'NOFOFLONASGN':
+                options.decimal.foflonasgn = false;
+                break;
+            case 'FOFLONDIV':
+                options.decimal.foflondiv = true;
+                break;
+            case 'NOFOFLONDIV':
+                options.decimal.foflondiv = false;
+                break;
+            case 'FOFLONMULT':
+                options.decimal.foflonmult = true;
+                break;
+            case 'NOFOFLONMULT':
+                options.decimal.foflonmult = false;
+                break;
+            case 'FORCEDSIGN':
+                options.decimal.forcedsign = true;
+                break;
+            case 'NOFORCEDSIGN':
+                options.decimal.forcedsign = false;
+                break;
+            case 'KEEPMINUS':
+                options.decimal.keepminus = true;
+                break;
+            case 'NOKEEPMINUS':
+                options.decimal.keepminus = false;
+                break;
+            case 'TRUNCFLOAT':
+                options.decimal.truncfloat = true;
+                break;
+            case 'NOTRUNCFLOAT':
+                options.decimal.truncfloat = false;
+                break;
+            default:
+                throw new TranslationError(opt.token, `Invalid decimal option. Expected one of 'CHECKFLOAT', 'NOCHECKFLOAT', 'FOFLONADD', 'NOFOFLONADD', 'FOFLONASGN', 'NOFOFLONASGN', 'FOFLONDIV', 'NOFOFLONDIV', 'FOFLONMULT', 'NOFOFLONMULT', 'FORCEDSIGN', 'NOFORCEDSIGN', 'KEEPMINUS', 'NOKEEPMINUS', 'TRUNCFLOAT', 'NOTRUNCFLOAT', but received '${value}'.`, 1);
+        }
+    }
+});
+
+/** {@link CompilerOptions.decomp} */
+translator.flag('decomp', ['DECOMP'], ['NODECOMP']);
+
+/** {@link CompilerOptions.default} */
+translator.rule(['DEFAULT'], (option, options) => {
+    const def: CompilerOptions.Default = options.default = {};
+    for (const opt of option.values) {
+        if (opt.type === 'text') {
+            const val = opt.value;
+            switch (val) {
+                case 'ALIGNED':
+                    def.aligned = true;
+                    break;
+                case 'UNALIGNED':
+                    def.aligned = false;
+                    break;
+                case 'IBM':
+                case 'ANS':
+                    def.architecture = val;
+                    break;
+                case 'EBCDIC':
+                case 'ASCII':
+                    def.encoding = val;
+                    break;
+                case 'ASSIGNABLE':
+                    def.assignable = true;
+                    break;
+                case 'NONASSIGNABLE':
+                    def.assignable = false;
+                    break;
+                case 'BIN1ARG':
+                    def.bin1arg = true;
+                    break;
+                case 'NOBIN1ARG':
+                    def.bin1arg = false;
+                    break;
+                case 'BYADDR':
+                case 'BYVALUE':
+                    def.allocator = val;
+                    break;
+                case 'CONNECTED':
+                    def.connected = true;
+                    break;
+                case 'NONCONNECTED':
+                    def.connected = false;
+                    break;
+                case 'DESCLIST':
+                    def.desc = 'LIST';
+                    break;
+                case 'DESCLOCATOR':
+                    def.desc = 'LOCATOR';
+                    break;
+                case 'DESCRIPTOR':
+                    def.descriptor = true;
+                    break;
+                case 'NODESCRIPTOR':
+                    def.descriptor = false;
+                    break;
+                case 'EVENDEC':
+                    def.evendec = true;
+                    break;
+                case 'NOEVENDEC':
+                    def.evendec = false;
+                    break;
+                case 'HEXADEC':
+                case 'IEEE':
+                    def.format = val;
+                    break;
+                case 'INLINE':
+                    def.inline = true;
+                    break;
+                case 'NOINLINE':
+                    def.inline = false;
+                    break;
+                case 'LAXQUAL':
+                    def.laxqual = true;
+                    break;
+                case 'NOLAXQUAL':
+                    def.laxqual = false;
+                    break;
+                case 'LOWERINC':
+                case 'UPPERINC':
+                    def.inc = val;
+                    break;
+                case 'NATIVE':
+                    def.native = true;
+                    break;
+                case 'NONNATIVE':
+                    def.native = false;
+                    break;
+                case 'NATIVEADDR':
+                    def.nativeAddr = true;
+                    break;
+                case 'NONNATIVEADDR':
+                    def.nativeAddr = false;
+                    break;
+                case 'NULLSYS':
+                case 'NULL370':
+                    def.nullsys = val;
+                    break;
+                case 'NULLSTRADDR':
+                    def.nullStrAddr = true;
+                    break;
+                case 'NONULLSTRADDR':
+                    def.nullStrAddr = false;
+                    break;
+                case 'ORDER':
+                case 'REORDER':
+                    def.order = val;
+                    break;
+                case 'OVERLAP':
+                    def.overlap = true;
+                    break;
+                case 'NOOVERLAP':
+                    def.overlap = false;
+                    break;
+                case 'PADDING':
+                    def.padding = true;
+                    break;
+                case 'NOPADDING':
+                    def.padding = false;
+                    break;
+                case 'PSEUDODUMMY':
+                    def.pseudodummy = true;
+                    break;
+                case 'NOPSEUDODUMMY':
+                    def.pseudodummy = false;
+                    break;
+                case 'RECURSIVE':
+                    def.recursive = true;
+                    break;
+                case 'NORECURSIVE':
+                    def.recursive = false;
+                    break;
+                case 'RETCODE':
+                    def.retcode = true;
+                    break;
+                case 'NORETCODE':
+                    def.retcode = false;
+                    break;
+                default:
+                    throw new TranslationError(opt.token, `Invalid default option value: ${val}`, 1);
+            }
+        }
+    }
+});
+
+/** {@link CompilerOptions.deprecate} */
+/** {@link CompilerOptions.deprecateNext} */
+/** {@link CompilerOptions.display} */
+/** {@link CompilerOptions.dll} */
+/** {@link CompilerOptions.dllInit} */
+/** {@link CompilerOptions.exit} */
+/** {@link CompilerOptions.exportAll} */
+/** {@link CompilerOptions.extrn} */
+/** {@link CompilerOptions.fileRef} */
+/** {@link CompilerOptions.flag} */
+/** {@link CompilerOptions.float} */
+/** {@link CompilerOptions.floatInMath} */
+/** {@link CompilerOptions.goff} */
+/** {@link CompilerOptions.goNumber} */
+/** {@link CompilerOptions.graphic} */
+/** {@link CompilerOptions.header} */
+/** {@link CompilerOptions.hgpr} */
+/** {@link CompilerOptions.ignore} */
+/** {@link CompilerOptions.incAfter} */
+/** {@link CompilerOptions.incDir} */
+/** {@link CompilerOptions.include} */
+/** {@link CompilerOptions.incPds} */
+/** {@link CompilerOptions.initAuto} */
+/** {@link CompilerOptions.initBased} */
+/** {@link CompilerOptions.initCtl} */
+/** {@link CompilerOptions.initStatic} */
+/** {@link CompilerOptions.inSource} */
+/** {@link CompilerOptions.interrupt} */
+/** {@link CompilerOptions.json} */
+/** {@link CompilerOptions.langlvl} */
+/** {@link CompilerOptions.limits} */
+/** {@link CompilerOptions.lineCount} */
+/** {@link CompilerOptions.lineDir} */
+/** {@link CompilerOptions.list} */
+/** {@link CompilerOptions.listView} */
+/** {@link CompilerOptions.LP} */
+/** {@link CompilerOptions.macro} */
+/** {@link CompilerOptions.map} */
+/** {@link CompilerOptions.margini} */
 
 /** {@link CompilerOptions.margins} */
 translator.rule(['MARGINS', 'MAR'], (option, options) => {
@@ -340,15 +668,81 @@ translator.rule(['MARGINS', 'MAR'], (option, options) => {
     options.margins = false;
 });
 
-/** {@link CompilerOptions.or} */
-translator.rule(['OR'], stringTranslate((options, value) => {
-    options.or = value;
-}));
+/** {@link CompilerOptions.maxbranch} */
+/** {@link CompilerOptions.maxinit} */
+/** {@link CompilerOptions.maxgen} */
+/** {@link CompilerOptions.maxmem} */
+/** {@link CompilerOptions.maxmsg} */
+/** {@link CompilerOptions.maxnest} */
+/** {@link CompilerOptions.maxRunOnIf} */
+/** {@link CompilerOptions.maxStatic} */
+/** {@link CompilerOptions.maxStmt} */
+/** {@link CompilerOptions.maxTemp} */
+/** {@link CompilerOptions.mDeck} */
+/** {@link CompilerOptions.msgSummary} */
+/** {@link CompilerOptions.name} */
+/** {@link CompilerOptions.names} */
+/** {@link CompilerOptions.natlang} */
+/** {@link CompilerOptions.nest} */
 
 /** {@link CompilerOptions.not} */
 translator.rule(['NOT'], stringTranslate((options, value) => {
-    options.not = value;
+    options.not = value.value;
 }));
+
+/** {@link CompilerOptions.nullDate} */
+/** {@link CompilerOptions.object} */
+/** {@link CompilerOptions.offset} */
+/** {@link CompilerOptions.offsetSize} */
+/** {@link CompilerOptions.onSnap} */
+/** {@link CompilerOptions.optimize} */
+/** {@link CompilerOptions.options} */
+
+/** {@link CompilerOptions.or} */
+translator.rule(['OR'], stringTranslate((options, value) => {
+    options.or = value.value;
+}));
+
+/** {@link CompilerOptions.pp} */
+/** {@link CompilerOptions.ppCics} */
+/** {@link CompilerOptions.ppInclude} */
+/** {@link CompilerOptions.ppList} */
+/** {@link CompilerOptions.ppMacro} */
+/** {@link CompilerOptions.ppSql} */
+/** {@link CompilerOptions.ppTrace} */
+/** {@link CompilerOptions.precType} */
+/** {@link CompilerOptions.prefix} */
+/** {@link CompilerOptions.proceed} */
+/** {@link CompilerOptions.process} */
+/** {@link CompilerOptions.quote} */
+/** {@link CompilerOptions.reduce} */
+/** {@link CompilerOptions.rent} */
+/** {@link CompilerOptions.resExp} */
+/** {@link CompilerOptions.respect} */
+/** {@link CompilerOptions.rtCheck} */
+/** {@link CompilerOptions.rules} */
+/** {@link CompilerOptions.semantic} */
+/** {@link CompilerOptions.service} */
+/** {@link CompilerOptions.source} */
+/** {@link CompilerOptions.spill} */
+/** {@link CompilerOptions.static} */
+/** {@link CompilerOptions.stdsys} */
+/** {@link CompilerOptions.stmt} */
+/** {@link CompilerOptions.storage} */
+/** {@link CompilerOptions.stringOfGraphic} */
+/** {@link CompilerOptions.syntax} */
+/** {@link CompilerOptions.sysParm} */
+/** {@link CompilerOptions.system} */
+/** {@link CompilerOptions.terminal} */
+/** {@link CompilerOptions.test} */
+/** {@link CompilerOptions.unroll} */
+/** {@link CompilerOptions.usage} */
+/** {@link CompilerOptions.widechar} */
+/** {@link CompilerOptions.window} */
+/** {@link CompilerOptions.writable} */
+/** {@link CompilerOptions.xInfo} */
+/** {@link CompilerOptions.xml} */
+/** {@link CompilerOptions.xRef} */
 
 export function translateCompilerOptions(input: AbstractCompilerOptions): CompilerOptionResult {
     translator.options = {};

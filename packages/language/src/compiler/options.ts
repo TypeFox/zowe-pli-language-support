@@ -135,7 +135,7 @@ export interface CompilerOptions {
     /**
      * https://www.ibm.com/docs/en/epfz/6.1?topic=descriptions-default
      */
-    default?: string[];
+    default?: CompilerOptions.Default;
     /**
      * https://www.ibm.com/docs/en/epfz/6.1?topic=descriptions-deprecate
      */
@@ -592,10 +592,61 @@ export declare namespace CompilerOptions {
         foflonadd?: boolean;
         foflonasgn?: boolean;
         foflondiv?: boolean;
-        foflonmult?: string;
+        foflonmult?: boolean;
         forcedsign?: boolean;
         keepminus?: boolean;
         truncfloat?: boolean;
+    }
+    export interface Default {
+        aligned?: boolean;
+        architecture?: 'IBM' | 'ANS';
+        encoding?: 'EBCDIC' | 'ASCII';
+        assignable?: boolean;
+        bin1arg?: boolean;
+        allocator?: 'BYADDR' | 'BYVALUE';
+        connected?: boolean;
+        desc?: 'LIST' | 'LOCATOR';
+        descriptor?: boolean;
+        dummy?: {
+            aligned?: boolean;
+        };
+        e?: {
+            format?: 'HEXADEC' | 'IEEE';
+        };
+        evendec?: boolean;
+        format?: 'HEXADEC' | 'IEEE';
+        initfill?: string | false;
+        inline?: boolean;
+        laxqual?: boolean;
+        linkage?: {
+            type?: 'OPTLINK' | 'SYSTEM';
+        };
+        inc?: 'LOWERINC' | 'UPPERINC';
+        native?: boolean;
+        nativeAddr?: boolean;
+        nullinit?: {
+            type?: 'NULL' | 'SYSNULL';
+        };
+        nullsys?: 'NULL370' | 'NULLSYS';
+        nullStrAddr?: boolean;
+        nullStrPtr?: {
+            type?: 'NULL' | 'STRICT' | 'SYSNULL';
+        };
+        order?: 'ORDER' | 'REORDER';
+        ordinal?: {
+            type: 'MIN' | 'MAX';
+        };
+        overlap?: boolean;
+        padding?: boolean;
+        pseudodummy?: boolean;
+        recursive?: boolean;
+        retcode?: boolean;
+        returns?: {
+            type: 'BYADDR' | 'BYVALUE';
+        };
+        short?: {
+            format?: 'HEXADEC' | 'IEEE';
+        }
     }
     export interface Deprecate {
         items: DeprecateItem[];
