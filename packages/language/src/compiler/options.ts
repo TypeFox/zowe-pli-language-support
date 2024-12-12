@@ -660,7 +660,7 @@ export declare namespace CompilerOptions {
         wto?: boolean;
         routcde?: string[];
         desc?: string[];
-        replay?: string[];
+        reply?: string[];
     }
     export interface Exit {
         inparm?: string;
@@ -971,4 +971,19 @@ export declare namespace CompilerOptions {
         length?: Length;
         structure?: 'EXPLICIT' | 'IMPLICIT';
     }
+}
+
+export function mergeCompilerOptions(...options: CompilerOptionResult[]): CompilerOptionResult {
+    return options.reduce((prev, curr) => {
+        return {
+            issues: prev.issues.concat(curr.issues),
+            options: {
+                ...prev.options,
+                ...curr.options
+            }
+        }
+    }, {
+        issues: [],
+        options: {}
+    } as CompilerOptionResult);
 }

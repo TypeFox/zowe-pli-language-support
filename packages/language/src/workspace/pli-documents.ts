@@ -22,16 +22,18 @@ export interface PliDocument extends LangiumDocument<PliProgram> {
 export class PliDocumentFactory extends DefaultLangiumDocumentFactory {
 
     protected override createLangiumDocument<T extends AstNode = AstNode>(parseResult: ParseResult<T>, uri: URI, textDocument?: TextDocument, text?: string): LangiumDocument<T> {
-        const document = super.createLangiumDocument(parseResult, uri, textDocument, text) as unknown as PliDocument;
         const lexer = (this.serviceRegistry.getServices(uri) as PliServices).parser.Lexer;
+        lexer.uri = uri;
+        const document = super.createLangiumDocument(parseResult, uri, textDocument, text) as unknown as PliDocument;
         document.compilerOptions = lexer.compilerOptions;
         return document as unknown as LangiumDocument<T>;
     }
 
     override async update<T extends AstNode = AstNode>(document: Mutable<LangiumDocument<T>>, cancellationToken: CancellationToken): Promise<LangiumDocument<T>> {
+        const lexer = (this.serviceRegistry.getServices(document.uri) as PliServices).parser.Lexer;
+        lexer.uri = document.uri;
         const updatedDocument = await super.update(document, cancellationToken);
         const pliDocument = updatedDocument as unknown as PliDocument;
-        const lexer = (this.serviceRegistry.getServices(updatedDocument.uri) as PliServices).parser.Lexer;
         pliDocument.compilerOptions = lexer.compilerOptions;
         return pliDocument as unknown as LangiumDocument<T>;
     }

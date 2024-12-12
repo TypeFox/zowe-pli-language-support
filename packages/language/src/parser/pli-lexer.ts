@@ -9,11 +9,13 @@
  *
  */
 
-import { DefaultLexer, LexerResult } from "langium";
-import { CompilerOptionResult } from "../compiler/options";
+import { DefaultLexer, LexerResult, URI } from "langium";
+import { CompilerOptionResult, mergeCompilerOptions } from "../compiler/options";
 import { parseAbstractCompilerOptions } from "../compiler/parser";
 import { translateCompilerOptions } from "../compiler/translator";
 import { PliTokenBuilder } from "./pli-token-builder";
+import { PliServices } from "../pli-module";
+import { PliConfigStorage } from "../workspace/pli-config-storage";
 
 const NEWLINE = '\n'.charCodeAt(0);
 
@@ -24,7 +26,16 @@ export class PliLexer extends DefaultLexer {
         options: {}
     };
 
+    uri!: URI;
+
     protected override readonly tokenBuilder!: PliTokenBuilder;
+
+    private readonly configStorage: PliConfigStorage;
+
+    constructor(services: PliServices) {
+        super(services);
+        this.configStorage = services.shared.workspace.PliConfigStorage;
+    }
 
     override tokenize(text: string): LexerResult {
         const lines = this.splitLines(text);
@@ -50,6 +61,7 @@ export class PliLexer extends DefaultLexer {
 
     private fillCompilerOptions(lines: string[]): CompilerOptionResult {
         const max = Math.min(lines.length, 100);
+        const globalOptions = this.configStorage.getCompilerOptions(this.uri);
         let fullText = '';
         for (let i = 0; i < max; i++) {
             const line = lines[i];
@@ -65,7 +77,7 @@ export class PliLexer extends DefaultLexer {
                 const compilerOptionsText = line.substring(startParseChar, endChar);
                 fullText += ' '.repeat(startParseChar) + compilerOptionsText;
                 const parsed = parseAbstractCompilerOptions(fullText);
-                this.compilerOptions = translateCompilerOptions(parsed);
+                this.compilerOptions = mergeCompilerOptions(globalOptions, translateCompilerOptions(parsed));
                 const newText = ' '.repeat(length) + eol;
                 lines[i] = newText;
                 return this.compilerOptions;
@@ -73,10 +85,7 @@ export class PliLexer extends DefaultLexer {
                 fullText += ' '.repeat(length) + eol;
             }
         }
-        this.compilerOptions = {
-            issues: [],
-            options: {}
-        };
+        this.compilerOptions = globalOptions;
         return this.compilerOptions;
     }
 

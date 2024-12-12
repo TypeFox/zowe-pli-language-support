@@ -9,8 +9,8 @@
  *
  */
 
-import { type Module, inject } from 'langium';
-import { createDefaultModule, createDefaultSharedModule, PartialLangiumSharedServices, type DefaultSharedModuleContext, type LangiumServices, type LangiumSharedServices, type PartialLangiumServices } from 'langium/lsp';
+import { DeepPartial, type Module, inject } from 'langium';
+import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModuleContext, type LangiumServices, type LangiumSharedServices } from 'langium/lsp';
 import { Pl1GeneratedModule, Pl1GeneratedSharedModule } from './generated/module.js';
 import { Pl1Validator, registerValidationChecks } from './validation/pli-validator.js';
 import { PliLexer } from './parser/pli-lexer.js';
@@ -27,6 +27,7 @@ import { PliCompletionProvider } from './lsp/pli-completion-provider.js';
 import { PliIndexManager } from './workspace/pli-index-manager.js';
 import { PliWorkspaceManager } from './workspace/pli-workspace-manager.js';
 import { PliDocumentFactory } from './workspace/pli-documents.js';
+import { PliConfigStorage } from './workspace/pli-config-storage.js';
 
 /**
  * Declaration of custom services - add your own service classes here.
@@ -38,6 +39,7 @@ export type PliAddedServices = {
     validation: {
         Pl1Validator: Pl1Validator
     }
+    shared: PliSharedServices
 }
 
 /**
@@ -51,7 +53,7 @@ export type PliServices = LangiumServices & PliAddedServices
  * declared custom services. The Langium defaults can be partially specified to override only
  * selected services, while the custom services must be fully specified.
  */
-export const PliModule: Module<PliServices, PartialLangiumServices & PliAddedServices> = {
+export const PliModule: Module<PliServices, DeepPartial<PliServices>> = {
     documentation: {
         DocumentationProvider: services => new PliDocumentationProvider(services)
     },
@@ -75,14 +77,23 @@ export const PliModule: Module<PliServices, PartialLangiumServices & PliAddedSer
     }
 };
 
-export const PliSharedModule: Module<LangiumSharedServices, PartialLangiumSharedServices> = {
+export type PliAddedSharedServices = {
+    workspace: {
+        PliConfigStorage: PliConfigStorage
+    }
+}
+
+export type PliSharedServices = LangiumSharedServices & PliAddedSharedServices;
+
+export const PliSharedModule: Module<PliSharedServices, DeepPartial<PliSharedServices>> = {
     lsp: {
         NodeKindProvider: () => new PliNodeKindProvider()
     },
     workspace: {
         LangiumDocumentFactory: services => new PliDocumentFactory(services),
         IndexManager: services => new PliIndexManager(services),
-        WorkspaceManager: services => new PliWorkspaceManager(services)
+        WorkspaceManager: services => new PliWorkspaceManager(services),
+        PliConfigStorage: services => new PliConfigStorage(services)
     }
 };
 

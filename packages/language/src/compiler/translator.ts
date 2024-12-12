@@ -66,7 +66,7 @@ class Translator {
             // We create a new diagnostic for the error
             if (err instanceof TranslationError) {
                 this.issues.push({
-                    range: tokenToRange(option.token),
+                    range: tokenToRange(err.token),
                     message: err.message,
                     severity: err.severity
                 });
@@ -367,6 +367,7 @@ translator.rule(
         options.dbrmlib = false;
     }
 );
+
 /** {@link CompilerOptions.dd} */
 translator.rule(['DD'], (option, options) => {
     ensureArguments(option, 0, 8);
@@ -606,17 +607,147 @@ translator.rule(['DEFAULT'], (option, options) => {
 
 /** {@link CompilerOptions.deprecate} */
 /** {@link CompilerOptions.deprecateNext} */
+translator.rule(['DEPRECATE', 'DEPRECATENEXT'], (option, options) => {
+    const items: CompilerOptions.DeprecateItem[] = [];
+    for (const opt of option.values) {
+        ensureType(opt, 'option');
+        if (!['BUILTIN', 'ENTRY', 'INCLUDE', 'STMT', 'VARIABLE'].includes(opt.name)) {
+            throw new TranslationError(opt.token, `Expected BUILTIN, ENTRY, INCLUDE, STMT or VARIABLE, but received '${opt.name}'`, 1);
+        }
+        ensureArguments(opt, 0, 1);
+        const optionValue = opt.values[0];
+        ensureType(optionValue, 'plain');
+        items.push({
+            type: opt.name as CompilerOptions.DeprecateItem['type'],
+            value: optionValue.value
+        });
+    }
+    if (option.name === 'DEPRECATE') {
+        options.deprecate = { items };
+    } else {
+        options.deprecateNext = { items };
+    }
+});
+
 /** {@link CompilerOptions.display} */
+translator.rule(['DISPLAY'], (option, options) => {
+    const display: CompilerOptions.Display = options.display = {};
+    ensureArguments(option, 1, 1);
+    const value = option.values[0];
+    if (value.type === 'text') {
+        if (value.value === 'STD') {
+            display.std = true;
+        } else if (value.value === 'WTO') {
+            display.wto = true;
+        } else {
+            throw new TranslationError(value.token, `Invalid display value. Expected STD or WTO, but received '${value.value}'.`, 1);
+        }
+    } else if (value.type === 'option') {
+        if (value.name !== 'WTO') {
+            throw new TranslationError(value.token, `Invalid display option. Expected WTO, but received '${value.name}'.`, 1);
+        }
+        display.wto = true;
+        for (const opt of value.values) {
+            ensureType(opt, 'option');
+            const parameters: string[] = [];
+            for (const param of opt.values) {
+                ensureType(param, 'plain');
+                parameters.push(param.value);
+            }
+            if (opt.name === 'ROUTCDE') {
+                display.routcde = parameters;
+            } else if (opt.name === 'DESC') {
+                display.desc = parameters;
+            } else if (opt.name === 'REPLY') {
+                display.reply = parameters;
+            } else {
+                throw new TranslationError(opt.token, `Invalid display option. Expected ROUTCDE, DESC or REPLY, but received '${opt.name}'.`, 1);
+            }
+        }
+    } else {
+        throw new TranslationError(value.token, `Invalid display value. Expected a text or an option, but received '${value.type}'.`, 1);
+    }
+});
+
 /** {@link CompilerOptions.dll} */
+translator.flag('dll', ['DLL'], ['NODLL']);
+
 /** {@link CompilerOptions.dllInit} */
+translator.flag('dllInit', ['DLLINIT'], ['NODLLINIT']);
+
 /** {@link CompilerOptions.exit} */
+translator.rule(
+    ['EXIT'],
+    (option, options) => {
+        ensureArguments(option, 0, 1);
+        const value = option.values[0];
+        if (value) {
+            ensureType(value, 'string');
+            options.exit = {
+                inparm: value.value
+            };
+        } else {
+            options.exit = {};
+        }
+    },
+    ['NOEXIT'], (_, options) => {
+        options.exit = false;
+    }
+);
+
 /** {@link CompilerOptions.exportAll} */
+translator.flag('exportAll', ['EXPORTALL'], ['NOEXPORTALL']);
+
 /** {@link CompilerOptions.extrn} */
+translator.rule(['EXTRN'], plainTranslate((options, value) => {
+    options.extrn = value.value as CompilerOptions.Length;
+}, 'FULL', 'SHORT'));
+
 /** {@link CompilerOptions.fileRef} */
+translator.rule(
+    ['FILEREF'],
+    plainTranslate((options, value) => {
+        options.fileRef = {
+            hash: value.value === 'HASH'
+        };
+    }, 'HASH', 'NOHASH'),
+    ['NOFILEREF'], (_, options) => {
+        options.fileRef = false;
+    }
+);
+
 /** {@link CompilerOptions.flag} */
+translator.rule(['FLAG', 'F'], (option, options) => {
+    ensureArguments(option, 0, 1);
+    const value = option.values[0];
+    if (value) {
+        ensureType(value, 'plain');
+        const flag = value.value;
+        if (flag === 'S' || flag === 'E' || flag === 'I' || flag === 'W') {
+            options.flag = flag;
+        } else {
+            throw new TranslationError(value.token, `Invalid flag value. Expected S, E, I or W, but received '${flag}'.`, 1);
+        }
+    }
+});
+
 /** {@link CompilerOptions.float} */
+translator.rule(['FLOAT'], plainTranslate((options, value) => {
+    options.float = {
+        dfp: value.value === 'DFP'
+    };
+}, 'DFP', 'NODFP'));
+
 /** {@link CompilerOptions.floatInMath} */
+translator.rule(['FLOATINMATH'], plainTranslate((options, value) => {
+    options.floatInMath = {
+        type: value.value as CompilerOptions.FloatInMath['type']
+    };
+}, 'ASIS', 'LONG', 'EXTENDED'));
+
 /** {@link CompilerOptions.goff} */
+translator.flag('goff', ['GOFF'], ['NOGOFF']);
+
 /** {@link CompilerOptions.goNumber} */
 /** {@link CompilerOptions.graphic} */
 /** {@link CompilerOptions.header} */

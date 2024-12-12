@@ -9,21 +9,33 @@
  *
  */
 
-import { DefaultWorkspaceManager, LangiumDocument, LangiumDocumentFactory, URI, WorkspaceFolder } from "langium";
+import { DefaultWorkspaceManager, LangiumDocument, LangiumDocumentFactory, URI, UriUtils, WorkspaceFolder } from "langium";
 import { Builtins } from "./pli-builtin-functions.js";
-import { LangiumSharedServices } from "langium/lsp";
+import { PliConfigStorage } from "./pli-config-storage.js";
+import { PliSharedServices } from "../pli-module.js";
 
 export class PliWorkspaceManager extends DefaultWorkspaceManager {
 
     private readonly factory: LangiumDocumentFactory;
+    private readonly configStorage: PliConfigStorage;
 
-    constructor(services: LangiumSharedServices) {
+    constructor(services: PliSharedServices) {
         super(services);
         this.factory = services.workspace.LangiumDocumentFactory;
+        this.configStorage = services.workspace.PliConfigStorage;
     }
 
     protected override async loadAdditionalDocuments(_folders: WorkspaceFolder[], _collector: (document: LangiumDocument) => void): Promise<void> {
         const document = this.factory.fromString(Builtins, URI.parse('pli-builtin:///builtins.pli'));
         _collector(document);
+        for (const folder of _folders) {
+            const uri = UriUtils.resolvePath(URI.parse(folder.uri), 'pgm_conf.json');
+            try {
+                const data = await this.fileSystemProvider.readFile(uri);
+                await this.configStorage.updateConfig(data, false);
+            } catch {
+                // ignore
+            }
+        }
     }
 }
