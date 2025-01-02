@@ -5,7 +5,7 @@ interface BaseTypeDescriptionProps {
     scope: Scope;
     storage: StorageClass;
 }
-export interface BaseTypeDescription extends BaseTypeDescriptionProps {
+interface BaseTypeDescription extends BaseTypeDescriptionProps {
     type: string;
 }
 
@@ -67,16 +67,16 @@ function createBaseTypeDescription(type: TypeDescriptionType, { alignment, scope
 const AreaType = 'area';
 type AreaType = typeof AreaType;
 
-interface AreaTypeDescriptionProps {
+interface AreaTypeDescriptionProps extends BaseTypeDescriptionProps {
     size: number;
 }
 
 
-export interface AreaTypeDescription extends BaseTypeDescription, AreaTypeDescriptionProps {
+interface AreaTypeDescription extends BaseTypeDescription, AreaTypeDescriptionProps {
     type: AreaType;
 }
 
-export function createAreaTypeDescription({ size, ...base }: AreaTypeDescriptionProps): AreaTypeDescription {
+function createAreaTypeDescription({ size, ...base }: AreaTypeDescriptionProps): AreaTypeDescription {
     return {
         type: AreaType,
         ...createBaseTypeDescription(AreaType, base),
@@ -84,7 +84,7 @@ export function createAreaTypeDescription({ size, ...base }: AreaTypeDescription
     };
 }
 
-export function isAreaTypeDescription(description: BaseTypeDescription): description is AreaTypeDescription {
+function isAreaTypeDescription(description: BaseTypeDescription): description is AreaTypeDescription {
     return description.type === AreaType;
 }
 
@@ -110,11 +110,11 @@ interface ArithmeticTypeDescriptionProps {
 }
 
 
-export interface ArithmeticTypeDescription extends BaseTypeDescription, ArithmeticTypeDescriptionProps {
+interface ArithmeticTypeDescription extends BaseTypeDescription, ArithmeticTypeDescriptionProps {
     type: ArithmeticType;
 }
 
-export function createArithmeticTypeDescription({ domain = 'real', fraction = 'float', unit = 'decimal', precision, sign = 'signed', ...base }: ArithmeticTypeDescriptionProps) {
+function createArithmeticTypeDescription({ domain = 'real', fraction = 'float', unit = 'decimal', precision, sign = 'signed', ...base }: ArithmeticTypeDescriptionProps) {
     return {
         type: ArithmeticType,
         ...createBaseTypeDescription(ArithmeticType, base),
@@ -126,7 +126,7 @@ export function createArithmeticTypeDescription({ domain = 'real', fraction = 'f
     };
 }
 
-export function isArithmeticTypeDescription(description: BaseTypeDescription): description is ArithmeticTypeDescription {
+function isArithmeticTypeDescription(description: BaseTypeDescription): description is ArithmeticTypeDescription {
     return description.type === ArithmeticType;
 }
 
@@ -138,18 +138,18 @@ interface FileTypeDescriptionProps extends BaseTypeDescriptionProps {
 
 }
 
-export interface FileTypeDescription extends BaseTypeDescription, FileTypeDescriptionProps {
+interface FileTypeDescription extends BaseTypeDescription, FileTypeDescriptionProps {
     type: FileType;
 }
 
-export function createFileTypeDescription({...base}: FileTypeDescriptionProps): FileTypeDescription {
+function createFileTypeDescription({...base}: FileTypeDescriptionProps): FileTypeDescription {
     return {
         type: FileType,
         ...createBaseTypeDescription(FileType, base)
     };
 }
 
-export function isFileTypeDescription(description: BaseTypeDescription): description is FileTypeDescription {
+function isFileTypeDescription(description: BaseTypeDescription): description is FileTypeDescription {
     return description.type === FileType;
 }
 
@@ -161,18 +161,18 @@ interface FormatTypeDescriptionProps extends BaseTypeDescriptionProps {
 
 }
 
-export interface FormatTypeDescription extends BaseTypeDescription, FormatTypeDescriptionProps {
+interface FormatTypeDescription extends BaseTypeDescription, FormatTypeDescriptionProps {
     type: FormatType;
 }
 
-export function createFormatTypeDescription({ ...base }: FormatTypeDescriptionProps): FormatTypeDescription {
+function createFormatTypeDescription({ ...base }: FormatTypeDescriptionProps): FormatTypeDescription {
     return {
         type: FormatType,
         ...createBaseTypeDescription(FormatType, base),
     };
 }
 
-export function isFormatTypeDescription(description: BaseTypeDescription): description is FormatTypeDescription {
+function isFormatTypeDescription(description: BaseTypeDescription): description is FormatTypeDescription {
     return description.type === FormatType;
 }
 
@@ -185,18 +185,18 @@ interface LabelTypeDescriptionProps extends BaseTypeDescriptionProps {
 }
 
 
-export interface LabelTypeDescription extends BaseTypeDescription, LabelTypeDescriptionProps {
+interface LabelTypeDescription extends BaseTypeDescription, LabelTypeDescriptionProps {
     type: LabelType;
 }
 
-export function createLabelTypeDescription({ ...base }: LabelTypeDescriptionProps): LabelTypeDescription {
+function createLabelTypeDescription({ ...base }: LabelTypeDescriptionProps): LabelTypeDescription {
     return {
         type: LabelType,
         ...createBaseTypeDescription(LabelType, base),
     };
 }
 
-export function isLabelTypeDescription(description: BaseTypeDescription): description is LabelTypeDescription {
+function isLabelTypeDescription(description: BaseTypeDescription): description is LabelTypeDescription {
     return description.type === LabelType;
 }
 
@@ -211,11 +211,11 @@ interface LocatorTypeDescriptionProps extends BaseTypeDescriptionProps {
     kind: LocatorKind;
 }
 
-export interface LocatorTypeDescription extends BaseTypeDescription, LocatorTypeDescriptionProps {
+interface LocatorTypeDescription extends BaseTypeDescription, LocatorTypeDescriptionProps {
     type: LocatorType;
 }
 
-export function createLocatorTypeDescription({ kind, ...base }: LocatorTypeDescriptionProps): LocatorTypeDescription {
+function createLocatorTypeDescription({ kind, ...base }: LocatorTypeDescriptionProps): LocatorTypeDescription {
     return {
         type: LocatorType,
         ...createBaseTypeDescription(LocatorType, base),
@@ -223,7 +223,7 @@ export function createLocatorTypeDescription({ kind, ...base }: LocatorTypeDescr
     };
 }
 
-export function isLocatorTypeDescription(description: BaseTypeDescription): description is LocatorTypeDescription {
+function isLocatorTypeDescription(description: BaseTypeDescription): description is LocatorTypeDescription {
     return description.type === LocatorType;
 }
 
@@ -235,18 +235,18 @@ interface EntryTypeDescriptionProps extends BaseTypeDescriptionProps {
 }
 
 
-export interface EntryTypeDescription extends BaseTypeDescription, EntryTypeDescriptionProps {
+interface EntryTypeDescription extends BaseTypeDescription, EntryTypeDescriptionProps {
     type: EntryType;
 }
 
-export function createEntryTypeDescription({ ...base }: EntryTypeDescriptionProps): EntryTypeDescription {
+function createEntryTypeDescription({ ...base }: EntryTypeDescriptionProps): EntryTypeDescription {
     return {
         type: EntryType,
         ...createBaseTypeDescription(EntryType, base),
     };
 }
 
-export function isEntryTypeDescription(description: BaseTypeDescription): description is EntryTypeDescription {
+function isEntryTypeDescription(description: BaseTypeDescription): description is EntryTypeDescription {
     return description.type === EntryType;
 }
 
@@ -259,11 +259,11 @@ interface OrdinalTypeDescriptionProps extends BaseTypeDescriptionProps {
 }
 
 
-export interface OrdinalTypeDescription extends BaseTypeDescription, OrdinalTypeDescriptionProps {
+interface OrdinalTypeDescription extends BaseTypeDescription, OrdinalTypeDescriptionProps {
     type: OrdinalType;
 }
 
-export function createOrdinalTypeDescription({ names, ...base }: OrdinalTypeDescriptionProps): OrdinalTypeDescription {
+function createOrdinalTypeDescription({ names, ...base }: OrdinalTypeDescriptionProps): OrdinalTypeDescription {
     return {
         type: OrdinalType,
         ...createBaseTypeDescription(OrdinalType, base),
@@ -271,7 +271,7 @@ export function createOrdinalTypeDescription({ names, ...base }: OrdinalTypeDesc
     };
 }
 
-export function isOrdinalTypeDescription(description: BaseTypeDescription): description is OrdinalTypeDescription {
+function isOrdinalTypeDescription(description: BaseTypeDescription): description is OrdinalTypeDescription {
     return description.type === OrdinalType;
 }
 
@@ -287,11 +287,11 @@ interface PictureTypeDescriptionProps extends BaseTypeDescriptionProps {
 }
 
 
-export interface PictureTypeDescription extends BaseTypeDescription, PictureTypeDescriptionProps {
+interface PictureTypeDescription extends BaseTypeDescription, PictureTypeDescriptionProps {
     type: PictureType;
 }
 
-export function createPictureTypeDescription({ kind, domain = 'real', ...base }: PictureTypeDescriptionProps): PictureTypeDescription {
+function createPictureTypeDescription({ kind, domain = 'real', ...base }: PictureTypeDescriptionProps): PictureTypeDescription {
     return {
         type: PictureType,
         ...createBaseTypeDescription(PictureType, base),
@@ -300,7 +300,7 @@ export function createPictureTypeDescription({ kind, domain = 'real', ...base }:
     };
 }
 
-export function isPictureTypeDescription(description: BaseTypeDescription): description is PictureTypeDescription {
+function isPictureTypeDescription(description: BaseTypeDescription): description is PictureTypeDescription {
     return description.type === PictureType;
 }
 
@@ -316,11 +316,11 @@ interface StringTypeDescriptionProps extends BaseTypeDescriptionProps {
     format: StringFormat;
 }
 
-export interface StringTypeDescription extends BaseTypeDescription, StringTypeDescriptionProps {
+interface StringTypeDescription extends BaseTypeDescription, StringTypeDescriptionProps {
     type: StringType;
 }
 
-export function createStringTypeDescription({ kind, format, ...base }: StringTypeDescriptionProps): StringTypeDescription {
+function createStringTypeDescription({ kind, format, ...base }: StringTypeDescriptionProps): StringTypeDescription {
     return {
         type: StringType,
         ...createBaseTypeDescription(StringType, base),
@@ -329,7 +329,7 @@ export function createStringTypeDescription({ kind, format, ...base }: StringTyp
     };
 }
 
-export function isStringTypeDescription(description: BaseTypeDescription): description is StringTypeDescription {
+function isStringTypeDescription(description: BaseTypeDescription): description is StringTypeDescription {
     return description.type === StringType;
 }
 
@@ -341,23 +341,23 @@ interface TaskTypeDescriptionProps extends BaseTypeDescriptionProps {
 
 }
 
-export interface TaskTypeDescription extends BaseTypeDescription, TaskTypeDescriptionProps {
+interface TaskTypeDescription extends BaseTypeDescription, TaskTypeDescriptionProps {
     type: TaskType;
 }
 
-export function createTaskTypeDescription({ ...base }: TaskTypeDescriptionProps): TaskTypeDescription {
+function createTaskTypeDescription({ ...base }: TaskTypeDescriptionProps): TaskTypeDescription {
     return {
         type: TaskType,
         ...createBaseTypeDescription(TaskType, base),
     };
 }
 
-export function isTaskTypeDescription(description: BaseTypeDescription): description is TaskTypeDescription {
+function isTaskTypeDescription(description: BaseTypeDescription): description is TaskTypeDescription {
     return description.type === TaskType;
 }
 
 //--- all together ---
-export type TypeDescription = 
+type TypeDescription = 
     | AreaTypeDescription
     | ArithmeticTypeDescription
     | FileTypeDescription
@@ -371,8 +371,50 @@ export type TypeDescription =
     | TaskTypeDescription
     ;
 
-export type TypeDescriptionType = TypeDescription['type'];
+type TypeDescriptionType = TypeDescription['type'];
 
 export namespace TypesDescriptions {
-    //TODO
+    export const Area = createAreaTypeDescription;
+    export type Area = AreaTypeDescription;
+    export const isArea = isAreaTypeDescription;
+
+    export const Arithmetic = createArithmeticTypeDescription;
+    export type Arithmetic = ArithmeticTypeDescription;
+    export const isArithmetic = isArithmeticTypeDescription;
+
+    export const File = createFileTypeDescription;
+    export type File = FileTypeDescription;
+    export const isFile = isFileTypeDescription;
+
+    export const Format = createFormatTypeDescription;
+    export type Format = FormatTypeDescription;
+    export const isFormat = isFormatTypeDescription;
+
+    export const Label = createLabelTypeDescription;
+    export type Label = LabelTypeDescription;
+    export const isLabel = isLabelTypeDescription;
+
+    export const Locator = createLocatorTypeDescription;
+    export type Locator = LocatorTypeDescription;
+    export const isLocator = isLocatorTypeDescription;
+
+    export const Entry = createEntryTypeDescription;
+    export type Entry = EntryTypeDescription;
+    export const isEntry = isEntryTypeDescription;
+
+    export const Ordinal = createOrdinalTypeDescription;
+    export type Ordinal = OrdinalTypeDescription;
+    export const isOrdinal = isOrdinalTypeDescription;
+
+    export const Picture = createPictureTypeDescription;
+    export type Picture = PictureTypeDescription;
+    export const isPicture = isPictureTypeDescription;
+
+    export const String = createStringTypeDescription;
+    export type String = StringTypeDescription;
+    export const isString = isStringTypeDescription;
+
+    export const Task = createTaskTypeDescription;
+    export type Task = TaskTypeDescription;
+    export const isTask = isTaskTypeDescription;
 }
