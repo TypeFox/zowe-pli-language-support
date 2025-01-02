@@ -1,25 +1,85 @@
 //see https://www.ibm.com/docs/en/epfz/6.1?topic=attributes-nondata#ndatts__vari
 
-export interface BaseTypeDescription {
+interface BaseTypeDescriptionProps {
+    alignment: Alignment;
+    scope: Scope;
+    storage: StorageClass;
+}
+export interface BaseTypeDescription extends BaseTypeDescriptionProps {
     type: string;
+}
+
+type Alignment = 'aligned' | 'unaligned';
+type Scope = 'internal' | 'external';
+type StorageClass = 'automatic' | 'static' | 'based' | 'controlled';
+
+/* TODO for storage attributes:
+Defined
+variable:
+  DEFINED
+  [POSITION]
+ 
+Parameter:
+PARAMETER
+[CONNECTED |
+NONCONNECTED]
+[CONTROLLED]
+ 
+[INITIAL
+[CALL]]
+ 
+[VARIABLE]
+ 
+[NORMAL |
+ABNORMAL]
+ 
+ASSIGNABLE |
+NONASSIGNABLE
+*/
+
+function createBaseTypeDescription(type: TypeDescriptionType, { alignment, scope, storage }: Partial<BaseTypeDescriptionProps>): BaseTypeDescriptionProps {
+    if(!alignment) {
+        if(type === PictureType || type === StringType) {
+            alignment = 'unaligned';
+        } else {
+            alignment = 'aligned';
+        }
+    }
+
+    scope ??= 'internal';
+
+    if(!storage) {
+        if(scope === 'internal') {
+            storage = 'automatic';
+        } else {
+            storage = 'static';
+        }
+    }
+
+    return {
+        scope,
+        storage,
+        alignment
+    };
 }
 
 //--- Area ---
 const AreaType = 'area';
-type AreaAlignment = 'aligned' | 'unaligned';
+type AreaType = typeof AreaType;
+
 interface AreaTypeDescriptionProps {
-    aligment: AreaAlignment;
     size: number;
 }
 
+
 export interface AreaTypeDescription extends BaseTypeDescription, AreaTypeDescriptionProps {
-    type: typeof AreaType;
+    type: AreaType;
 }
 
-export function createAreaTypeDescription({ size, aligment = 'aligned' }: AreaTypeDescriptionProps): AreaTypeDescription {
+export function createAreaTypeDescription({ size, ...base }: AreaTypeDescriptionProps): AreaTypeDescription {
     return {
         type: AreaType,
-        aligment,
+        ...createBaseTypeDescription(AreaType, base),
         size
     };
 }
@@ -30,6 +90,8 @@ export function isAreaTypeDescription(description: BaseTypeDescription): descrip
 
 //--- Arithmetic ---
 const ArithmeticType = 'arithmetic';
+type ArithmeticType = typeof ArithmeticType;
+
 type NumberDomain = 'real' | 'complex';
 type FractionMode = 'float' | 'fixed';
 type BaseUnit = 'binary' | 'decimal';
@@ -47,13 +109,15 @@ interface ArithmeticTypeDescriptionProps {
     sign: Sign;
 }
 
+
 export interface ArithmeticTypeDescription extends BaseTypeDescription, ArithmeticTypeDescriptionProps {
-    type: typeof ArithmeticType;
+    type: ArithmeticType;
 }
 
-export function createArithmeticTypeDescription({ domain = 'real', fraction = 'float', unit = 'decimal', precision, sign = 'signed' }: ArithmeticTypeDescriptionProps) {
+export function createArithmeticTypeDescription({ domain = 'real', fraction = 'float', unit = 'decimal', precision, sign = 'signed', ...base }: ArithmeticTypeDescriptionProps) {
     return {
         type: ArithmeticType,
+        ...createBaseTypeDescription(ArithmeticType, base),
         domain,
         fraction,
         unit,
@@ -68,18 +132,20 @@ export function isArithmeticTypeDescription(description: BaseTypeDescription): d
 
 //--- File ---
 const FileType = "file";
+type FileType = typeof FileType;
 
-interface FileTypeDescriptionProps {
+interface FileTypeDescriptionProps extends BaseTypeDescriptionProps {
 
 }
 
 export interface FileTypeDescription extends BaseTypeDescription, FileTypeDescriptionProps {
-    type: typeof FileType;
+    type: FileType;
 }
 
-export function createFileTypeDescription({ }: FileTypeDescriptionProps): FileTypeDescription {
+export function createFileTypeDescription({...base}: FileTypeDescriptionProps): FileTypeDescription {
     return {
-        type: FileType
+        type: FileType,
+        ...createBaseTypeDescription(FileType, base)
     };
 }
 
@@ -89,18 +155,20 @@ export function isFileTypeDescription(description: BaseTypeDescription): descrip
 
 //--- Format ---
 const FormatType = "format";
+type FormatType = typeof FormatType;
 
-interface FormatTypeDescriptionProps {
+interface FormatTypeDescriptionProps extends BaseTypeDescriptionProps {
 
 }
 
 export interface FormatTypeDescription extends BaseTypeDescription, FormatTypeDescriptionProps {
-    type: typeof FormatType;
+    type: FormatType;
 }
 
-export function createFormatTypeDescription({ }: FormatTypeDescriptionProps): FormatTypeDescription {
+export function createFormatTypeDescription({ ...base }: FormatTypeDescriptionProps): FormatTypeDescription {
     return {
-        type: FormatType
+        type: FormatType,
+        ...createBaseTypeDescription(FormatType, base),
     };
 }
 
@@ -110,18 +178,21 @@ export function isFormatTypeDescription(description: BaseTypeDescription): descr
 
 //--- Label ---
 const LabelType = "label";
+type LabelType = typeof LabelType;
 
-interface LabelTypeDescriptionProps {
+interface LabelTypeDescriptionProps extends BaseTypeDescriptionProps {
 
 }
+
 
 export interface LabelTypeDescription extends BaseTypeDescription, LabelTypeDescriptionProps {
-    type: typeof LabelType;
+    type: LabelType;
 }
 
-export function createLabelTypeDescription({ }: LabelTypeDescriptionProps): LabelTypeDescription {
+export function createLabelTypeDescription({ ...base }: LabelTypeDescriptionProps): LabelTypeDescription {
     return {
-        type: LabelType
+        type: LabelType,
+        ...createBaseTypeDescription(LabelType, base),
     };
 }
 
@@ -131,20 +202,23 @@ export function isLabelTypeDescription(description: BaseTypeDescription): descri
 
 //--- Locator ---
 const LocatorType = "locator";
+type LocatorType = typeof LocatorType;
+
 type LocatorKind = 'pointer' | 'handle' | 'offset';
 //kind: pointer | handle(Type) | offset(area-variable LOCATES)
 
-interface LocatorTypeDescriptionProps {
+interface LocatorTypeDescriptionProps extends BaseTypeDescriptionProps {
     kind: LocatorKind;
 }
 
 export interface LocatorTypeDescription extends BaseTypeDescription, LocatorTypeDescriptionProps {
-    type: typeof LocatorType;
+    type: LocatorType;
 }
 
-export function createLocatorTypeDescription({ kind }: LocatorTypeDescriptionProps): LocatorTypeDescription {
+export function createLocatorTypeDescription({ kind, ...base }: LocatorTypeDescriptionProps): LocatorTypeDescription {
     return {
         type: LocatorType,
+        ...createBaseTypeDescription(LocatorType, base),
         kind
     };
 }
@@ -155,17 +229,20 @@ export function isLocatorTypeDescription(description: BaseTypeDescription): desc
 
 //--- Entry ---
 const EntryType = "entry";
+type EntryType = typeof EntryType;
 
-interface EntryTypeDescriptionProps {
+interface EntryTypeDescriptionProps extends BaseTypeDescriptionProps {
 }
+
 
 export interface EntryTypeDescription extends BaseTypeDescription, EntryTypeDescriptionProps {
-    type: typeof EntryType;
+    type: EntryType;
 }
 
-export function createEntryTypeDescription({ }: EntryTypeDescriptionProps): EntryTypeDescription {
+export function createEntryTypeDescription({ ...base }: EntryTypeDescriptionProps): EntryTypeDescription {
     return {
-        type: EntryType
+        type: EntryType,
+        ...createBaseTypeDescription(EntryType, base),
     };
 }
 
@@ -175,18 +252,21 @@ export function isEntryTypeDescription(description: BaseTypeDescription): descri
 
 //--- Ordinal ---
 const OrdinalType = "ordinal";
+type OrdinalType = typeof OrdinalType;
 
-interface OrdinalTypeDescriptionProps {
+interface OrdinalTypeDescriptionProps extends BaseTypeDescriptionProps {
     names: string[];
 }
 
+
 export interface OrdinalTypeDescription extends BaseTypeDescription, OrdinalTypeDescriptionProps {
-    type: typeof OrdinalType;
+    type: OrdinalType;
 }
 
-export function createOrdinalTypeDescription({ names }: OrdinalTypeDescriptionProps): OrdinalTypeDescription {
+export function createOrdinalTypeDescription({ names, ...base }: OrdinalTypeDescriptionProps): OrdinalTypeDescription {
     return {
         type: OrdinalType,
+        ...createBaseTypeDescription(OrdinalType, base),
         names
     };
 }
@@ -197,21 +277,24 @@ export function isOrdinalTypeDescription(description: BaseTypeDescription): desc
 
 //--- Picture ---
 const PictureType = "picture";
+type PictureType = typeof PictureType;
 
 type PictureWideness = 'picture' | 'widepic';
 
-interface PictureTypeDescriptionProps {
+interface PictureTypeDescriptionProps extends BaseTypeDescriptionProps {
     kind: PictureWideness;
     domain: NumberDomain;
 }
 
+
 export interface PictureTypeDescription extends BaseTypeDescription, PictureTypeDescriptionProps {
-    type: typeof PictureType;
+    type: PictureType;
 }
 
-export function createPictureTypeDescription({ kind, domain = 'real' }: PictureTypeDescriptionProps): PictureTypeDescription {
+export function createPictureTypeDescription({ kind, domain = 'real', ...base }: PictureTypeDescriptionProps): PictureTypeDescription {
     return {
         type: PictureType,
+        ...createBaseTypeDescription(PictureType, base),
         kind,
         domain
     };
@@ -223,21 +306,24 @@ export function isPictureTypeDescription(description: BaseTypeDescription): desc
 
 //--- String ---
 const StringType = "string";
+type StringType = typeof StringType;
+
 type StringKind = 'bit' | 'character' | 'graphic' | 'uchar' | number /* widechar(length) */;
 type StringFormat = 'varying' | 'varying4' | 'varyingz' | 'nonvarying';
 
-interface StringTypeDescriptionProps {
+interface StringTypeDescriptionProps extends BaseTypeDescriptionProps {
     kind: StringKind;
     format: StringFormat;
 }
 
 export interface StringTypeDescription extends BaseTypeDescription, StringTypeDescriptionProps {
-    type: typeof StringType;
+    type: StringType;
 }
 
-export function createStringTypeDescription({ kind, format }: StringTypeDescriptionProps): StringTypeDescription {
+export function createStringTypeDescription({ kind, format, ...base }: StringTypeDescriptionProps): StringTypeDescription {
     return {
         type: StringType,
+        ...createBaseTypeDescription(StringType, base),
         kind,
         format
     };
@@ -249,18 +335,20 @@ export function isStringTypeDescription(description: BaseTypeDescription): descr
 
 //--- Task ---
 const TaskType = "task";
+type TaskType = typeof TaskType;
 
-interface TaskTypeDescriptionProps {
+interface TaskTypeDescriptionProps extends BaseTypeDescriptionProps {
 
 }
 
 export interface TaskTypeDescription extends BaseTypeDescription, TaskTypeDescriptionProps {
-    type: typeof TaskType;
+    type: TaskType;
 }
 
-export function createTaskTypeDescription({ }: TaskTypeDescriptionProps): TaskTypeDescription {
+export function createTaskTypeDescription({ ...base }: TaskTypeDescriptionProps): TaskTypeDescription {
     return {
-        type: TaskType
+        type: TaskType,
+        ...createBaseTypeDescription(TaskType, base),
     };
 }
 
