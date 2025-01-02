@@ -36,6 +36,34 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0(@types/node@18.19.70)
 
+  packages/extension:
+    dependencies:
+      langium:
+        specifier: ~3.2.0
+        version: 3.2.0
+      pl-one-language:
+        specifier: workspace:*
+        version: link:../language
+      vscode-languageclient:
+        specifier: ~9.0.1
+        version: 9.0.1
+      vscode-languageserver:
+        specifier: ~9.0.1
+        version: 9.0.1
+    devDependencies:
+      '@types/vscode':
+        specifier: ~1.67.0
+        version: 1.67.0
+      '@vscode/vsce':
+        specifier: ^3.0.0
+        version: 3.2.1
+      concurrently:
+        specifier: ~8.2.1
+        version: 8.2.2
+      esbuild:
+        specifier: ~0.21.5
+        version: 0.21.5
+
   packages/language:
     dependencies:
       chevrotain:
