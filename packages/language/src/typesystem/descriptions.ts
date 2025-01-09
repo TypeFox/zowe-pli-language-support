@@ -1,5 +1,8 @@
 /** @see https://www.ibm.com/docs/en/epfz/6.1?topic=attributes-nondata#ndatts__vari */
 
+/** Makes T partial except for properties P, they are required */
+type PartialPartial<T, P extends keyof T> = Partial<Omit<T, P>> & Required<Omit<T, Exclude<keyof T, P>>>;
+
 interface BaseTypeDescriptionProps {
     alignment: Alignment;
     scope: Scope;
@@ -97,7 +100,10 @@ interface AreaTypeDescription extends BaseTypeDescription, AreaTypeDescriptionPr
     type: AreaType;
 }
 
-function createAreaTypeDescription({ size, ...base }: AreaTypeDescriptionProps): AreaTypeDescription {
+/**
+ * @see https://www.ibm.com/docs/en/epfz/6.1?topic=control-area-data-attribute
+ */
+function createAreaTypeDescription({ size = 1000, ...base }: Partial<AreaTypeDescriptionProps>): AreaTypeDescription {
     return {
         type: AreaType,
         ...createBaseTypeDescription(AreaType, base),
@@ -136,7 +142,29 @@ interface ArithmeticTypeDescription extends BaseTypeDescription, ArithmeticTypeD
     type: ArithmeticType;
 }
 
-function createArithmeticTypeDescription({ mode = 'real', scale = 'float', base: unit = 'decimal', precision, sign = 'signed', ...base }: ArithmeticTypeDescriptionProps): ArithmeticTypeDescription {
+//@see https://www.microfocus.com/documentation/openpli/80/pulang.htm
+//Data  Type   	Max Precision   	Default Precision
+//Fixed Binary	31	                15*
+//Fixed Decimal	18	                5
+//Float Binary	52	                23
+//Float Decimal	16	                6
+//TODO * The -Iongint Compiler option changes the default precision of fixed binary from 15 to 31.
+const DefaultPrecisions: Record<ScaleMode, Record<Base, number>> = {
+    float: {
+        binary: 23,
+        decimal: 6
+    },
+    fixed: {
+        binary: 15,
+        decimal: 5
+    }
+};
+
+function createArithmeticTypeDescription({ mode = 'real', scale = 'float', base: unit = 'decimal', precision, sign = 'signed', ...base }: Partial<ArithmeticTypeDescriptionProps>): ArithmeticTypeDescription {
+    precision ??= {
+        totalCount: DefaultPrecisions[scale][unit],
+        fractionalCount: 0
+    };
     return {
         type: ArithmeticType,
         ...createBaseTypeDescription(ArithmeticType, base),
@@ -164,7 +192,7 @@ interface FileTypeDescription extends BaseTypeDescription, FileTypeDescriptionPr
     type: FileType;
 }
 
-function createFileTypeDescription({...base}: FileTypeDescriptionProps): FileTypeDescription {
+function createFileTypeDescription({...base}: Partial<FileTypeDescriptionProps>): FileTypeDescription {
     return {
         type: FileType,
         ...createBaseTypeDescription(FileType, base)
@@ -187,7 +215,7 @@ interface FormatTypeDescription extends BaseTypeDescription, FormatTypeDescripti
     type: FormatType;
 }
 
-function createFormatTypeDescription({ ...base }: FormatTypeDescriptionProps): FormatTypeDescription {
+function createFormatTypeDescription({ ...base }: Partial<FormatTypeDescriptionProps>): FormatTypeDescription {
     return {
         type: FormatType,
         ...createBaseTypeDescription(FormatType, base),
@@ -211,7 +239,7 @@ interface LabelTypeDescription extends BaseTypeDescription, LabelTypeDescription
     type: LabelType;
 }
 
-function createLabelTypeDescription({ ...base }: LabelTypeDescriptionProps): LabelTypeDescription {
+function createLabelTypeDescription({ ...base }: Partial<LabelTypeDescriptionProps>): LabelTypeDescription {
     return {
         type: LabelType,
         ...createBaseTypeDescription(LabelType, base),
@@ -226,8 +254,9 @@ function isLabelTypeDescription(description: BaseTypeDescription): description i
 const LocatorType = "locator";
 type LocatorType = typeof LocatorType;
 
-type LocatorKind = 'pointer' | 'handle' | 'offset';
-//kind: pointer | handle(Type) | offset(area-variable LOCATES)
+type LocatorKind = { type: 'pointer', size: 32|64 } 
+    | { type: 'handle', size: 32|64, structTypeName: string }
+    | { type: 'offset', areaVariable: null };
 
 interface LocatorTypeDescriptionProps extends BaseTypeDescriptionProps {
     kind: LocatorKind;
@@ -237,7 +266,7 @@ interface LocatorTypeDescription extends BaseTypeDescription, LocatorTypeDescrip
     type: LocatorType;
 }
 
-function createLocatorTypeDescription({ kind, ...base }: LocatorTypeDescriptionProps): LocatorTypeDescription {
+function createLocatorTypeDescription({ kind, ...base }: PartialPartial<LocatorTypeDescriptionProps, 'kind'>): LocatorTypeDescription {
     return {
         type: LocatorType,
         ...createBaseTypeDescription(LocatorType, base),
@@ -261,7 +290,7 @@ interface EntryTypeDescription extends BaseTypeDescription, EntryTypeDescription
     type: EntryType;
 }
 
-function createEntryTypeDescription({ ...base }: EntryTypeDescriptionProps): EntryTypeDescription {
+function createEntryTypeDescription({ ...base }: Partial<EntryTypeDescriptionProps>): EntryTypeDescription {
     return {
         type: EntryType,
         ...createBaseTypeDescription(EntryType, base),
@@ -285,7 +314,7 @@ interface OrdinalTypeDescription extends BaseTypeDescription, OrdinalTypeDescrip
     type: OrdinalType;
 }
 
-function createOrdinalTypeDescription({ names, ...base }: OrdinalTypeDescriptionProps): OrdinalTypeDescription {
+function createOrdinalTypeDescription({ names, ...base }: PartialPartial<OrdinalTypeDescriptionProps, 'names'>): OrdinalTypeDescription {
     return {
         type: OrdinalType,
         ...createBaseTypeDescription(OrdinalType, base),
@@ -313,7 +342,7 @@ interface PictureTypeDescription extends BaseTypeDescription, PictureTypeDescrip
     type: PictureType;
 }
 
-function createPictureTypeDescription({ kind, domain = 'real', ...base }: PictureTypeDescriptionProps): PictureTypeDescription {
+function createPictureTypeDescription({ kind, domain = 'real', ...base }: PartialPartial<PictureTypeDescriptionProps, 'kind'>): PictureTypeDescription {
     return {
         type: PictureType,
         ...createBaseTypeDescription(PictureType, base),
@@ -330,23 +359,25 @@ function isPictureTypeDescription(description: BaseTypeDescription): description
 const StringType = "string";
 type StringType = typeof StringType;
 
-type StringKind = 'bit' | 'character' | 'graphic' | 'uchar' | number /* widechar(length) */;
+type StringKind = 'bit' | 'character' | 'graphic' | 'uchar' | 'widechar';
 type StringFormat = 'varying' | 'varying4' | 'varyingz' | 'nonvarying';
 
 interface StringTypeDescriptionProps extends BaseTypeDescriptionProps {
     kind: StringKind;
     format: StringFormat;
+    length: number;
 }
 
 interface StringTypeDescription extends BaseTypeDescription, StringTypeDescriptionProps {
     type: StringType;
 }
 
-function createStringTypeDescription({ kind, format, ...base }: StringTypeDescriptionProps): StringTypeDescription {
+function createStringTypeDescription({ kind, format, length, ...base }: PartialPartial<StringTypeDescriptionProps, 'length'|'kind'|'format'>): StringTypeDescription {
     return {
         type: StringType,
         ...createBaseTypeDescription(StringType, base),
         kind,
+        length,
         format
     };
 }
@@ -367,7 +398,7 @@ interface TaskTypeDescription extends BaseTypeDescription, TaskTypeDescriptionPr
     type: TaskType;
 }
 
-function createTaskTypeDescription({ ...base }: TaskTypeDescriptionProps): TaskTypeDescription {
+function createTaskTypeDescription({ ...base }: Partial<TaskTypeDescriptionProps>): TaskTypeDescription {
     return {
         type: TaskType,
         ...createBaseTypeDescription(TaskType, base),
@@ -441,4 +472,12 @@ export namespace TypesDescriptions {
     export const Task = createTaskTypeDescription;
     export type Task = TaskTypeDescription;
     export const isTask = isTaskTypeDescription;
+
+    /** fake type */
+    export const Boolean = createStringTypeDescription({
+        kind: 'bit',
+        format: "nonvarying",
+        length: 1
+    });
+    export const isBoolean = (type: TypeDescription): type is StringTypeDescription => isString(type) && type.kind === 'bit' && type.length === 1;
 }
