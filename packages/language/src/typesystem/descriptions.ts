@@ -396,6 +396,8 @@ type TypeDescription =
 type TypeDescriptionType = TypeDescription['type'];
 
 export namespace TypesDescriptions {
+    export type Any = TypeDescriptionType;
+
     export const Area = createAreaTypeDescription;
     export type Area = AreaTypeDescription;
     export const isArea = isAreaTypeDescription;
