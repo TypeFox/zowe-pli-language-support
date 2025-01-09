@@ -1,55 +1,71 @@
-//see https://www.ibm.com/docs/en/epfz/6.1?topic=attributes-nondata#ndatts__vari
+/** @see https://www.ibm.com/docs/en/epfz/6.1?topic=attributes-nondata#ndatts__vari */
 
 interface BaseTypeDescriptionProps {
     alignment: Alignment;
     scope: Scope;
     storage: StorageClass;
+    volatility: Volatility;
+    position?: StoragePosition;
+    assignability: Assignability;
+    connection: StorageConnection;
+    variable?: boolean;
 }
 interface BaseTypeDescription extends BaseTypeDescriptionProps {
     type: string;
 }
 
-type Alignment = 'aligned' | 'unaligned';
-type Scope = 'internal' | 'external';
+/** @see https://www.ibm.com/docs/en/epfz/6.1?topic=alignment-aligned-unaligned-attributes */
+type Alignment = { type: 'aligned', alignment: 1|2|4|8 } | { type: 'unaligned' };
+/** @see https://www.ibm.com/docs/en/epfz/6.1?topic=declarations-internal-external-attributes */
+type Scope = { type: 'internal' } | { type: 'external', environment: string };
+/** @see https://www.ibm.com/docs/en/epfz/6.1?topic=control-storage-classes-allocation-deallocation */
 type StorageClass = 'automatic' | 'static' | 'based' | 'controlled';
+/** @see https://www.ibm.com/docs/en/epfz/6.1?topic=control-connected-nonconnected-attributes */
+type StorageConnection = 'connected' | 'nonconnected';
+
+/** @see https://www.ibm.com/docs/en/epfz/6.1?topic=control-assignable-nonassignable-attributes */
+type Assignability = 'assignable' | 'nonassignable';
+/** @see https://www.ibm.com/docs/en/epfz/6.1?topic=control-defined-position-attributes */
+type StoragePosition = { //DEFINED variable [POSITION (position)]
+    variable: null;//TODO set to "Variable" AstNode
+    position: null;//TODO set to "Expression" AstNode
+}
+
+/** @see https://www.ibm.com/docs/en/epfz/6.1?topic=control-normal-abnormal-attributes */
+type Volatility = 'normal' | 'abnormal';
 
 /* TODO for storage attributes:
-Defined
-variable:
-  DEFINED
-  [POSITION]
- 
 Parameter:
 PARAMETER
-[CONNECTED |
-NONCONNECTED]
 [CONTROLLED]
- 
+
+@see https://www.ibm.com/docs/en/epfz/6.1?topic=control-initial-attribute
 [INITIAL
 [CALL]]
- 
-[VARIABLE]
- 
-[NORMAL |
-ABNORMAL]
- 
-ASSIGNABLE |
-NONASSIGNABLE
 */
 
-function createBaseTypeDescription(type: TypeDescriptionType, { alignment, scope, storage }: Partial<BaseTypeDescriptionProps>): BaseTypeDescriptionProps {
+function createBaseTypeDescription(type: TypeDescriptionType, { alignment, connection, scope, storage, volatility, position, assignability, variable }: Partial<BaseTypeDescriptionProps>): BaseTypeDescriptionProps {
     if(!alignment) {
         if(type === PictureType || type === StringType) {
-            alignment = 'unaligned';
+            alignment = { type: 'unaligned' };
         } else {
-            alignment = 'aligned';
+            alignment = { type: 'aligned', alignment: 1 }; //TODO no documentation of default value for alignment
         }
     }
 
-    scope ??= 'internal';
+    if(variable !== undefined) {
+        if(type !== EntryType && type !== FileType && type !== LabelType) {
+            variable = undefined;
+        }
+    }
+
+    assignability ??= 'assignable';
+    connection ??= 'nonconnected';
+    scope ??= { type: 'internal' };
+    volatility ??= 'normal';
 
     if(!storage) {
-        if(scope === 'internal') {
+        if(scope?.type === 'internal') {
             storage = 'automatic';
         } else {
             storage = 'static';
@@ -57,9 +73,14 @@ function createBaseTypeDescription(type: TypeDescriptionType, { alignment, scope
     }
 
     return {
+        alignment,
+        assignability,
+        connection,
+        position,
         scope,
         storage,
-        alignment
+        variable,
+        volatility,
     };
 }
 
@@ -92,19 +113,20 @@ function isAreaTypeDescription(description: BaseTypeDescription): description is
 const ArithmeticType = 'arithmetic';
 type ArithmeticType = typeof ArithmeticType;
 
-type NumberDomain = 'real' | 'complex';
-type FractionMode = 'float' | 'fixed';
-type BaseUnit = 'binary' | 'decimal';
+type NumberMode = 'real' | 'complex';
+type ScaleMode = 'float' | 'fixed';
+type Base = 'binary' | 'decimal';
 type Precision = {
     totalCount: number;
-    fractionalCount: number; //<= totalCount
+    /** Attention: fractionalCount <= totalCount */
+    fractionalCount: number; 
 };
 type Sign = 'signed' | 'unsigned';
 
 interface ArithmeticTypeDescriptionProps {
-    domain: NumberDomain;
-    fraction: FractionMode;
-    unit: BaseUnit;
+    mode: NumberMode;
+    scale: ScaleMode;
+    base: Base;
     precision: Precision;
     sign: Sign;
 }
@@ -114,13 +136,13 @@ interface ArithmeticTypeDescription extends BaseTypeDescription, ArithmeticTypeD
     type: ArithmeticType;
 }
 
-function createArithmeticTypeDescription({ domain = 'real', fraction = 'float', unit = 'decimal', precision, sign = 'signed', ...base }: ArithmeticTypeDescriptionProps) {
+function createArithmeticTypeDescription({ mode = 'real', scale = 'float', base: unit = 'decimal', precision, sign = 'signed', ...base }: ArithmeticTypeDescriptionProps): ArithmeticTypeDescription {
     return {
         type: ArithmeticType,
         ...createBaseTypeDescription(ArithmeticType, base),
-        domain,
-        fraction,
-        unit,
+        mode,
+        scale,
+        base: unit,
         precision,
         sign
     };
@@ -283,7 +305,7 @@ type PictureWideness = 'picture' | 'widepic';
 
 interface PictureTypeDescriptionProps extends BaseTypeDescriptionProps {
     kind: PictureWideness;
-    domain: NumberDomain;
+    domain: NumberMode;
 }
 
 
