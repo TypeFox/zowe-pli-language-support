@@ -14,6 +14,7 @@ export class DefaultPliTypeInferer implements PliTypeInferer {
         if(isExpression(node)) {
             switch(node.$type) {
                 case "BinaryExpression":
+                    //@see https://www.ibm.com/docs/en/epfz/6.1?topic=operations-results-arithmetic
                     switch(node.op) {
                         case "!!":
                         case "&":
@@ -22,12 +23,6 @@ export class DefaultPliTypeInferer implements PliTypeInferer {
                         case "+":
                         case "-":
                         case "/":
-                        case "<":
-                        case "<=":
-                        case "<>":
-                        case "=":
-                        case ">":
-                        case ">=":
                         case "^":
                         case "^=":
                         case "|":
@@ -37,6 +32,13 @@ export class DefaultPliTypeInferer implements PliTypeInferer {
                         case "¬=":
                         case "¬>":
                             break;
+                        case "<":
+                        case "<=":
+                        case "<>":
+                        case "=":
+                        case ">":
+                        case ">=":
+                            return TypesDescriptions.Boolean;
                         default:
                             assertUnreachable(node)
                     }
