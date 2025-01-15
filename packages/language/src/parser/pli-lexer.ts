@@ -41,7 +41,7 @@ export class PliLexer extends DefaultLexer {
         const lines = this.splitLines(text);
         this.fillCompilerOptions(lines);
         this.tokenBuilder.or = this.compilerOptions.options.or || '|';
-        this.tokenBuilder.not = this.compilerOptions.options.not || '¬';
+        this.tokenBuilder.not = this.compilerOptions.options.not || '^';
         const adjustedLines = lines.map(line => this.adjustLine(line));
         const adjustedText = adjustedLines.join('');
         return super.tokenize(adjustedText);

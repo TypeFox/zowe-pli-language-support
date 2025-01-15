@@ -24,7 +24,7 @@ export class PliTokenBuilder extends DefaultTokenBuilder {
      * 
      * `false` by default.
      */
-    static EXPERIMENTAL = false;
+    static EXPERIMENTAL = true;
 
     override buildTokens(grammar: Grammar, options?: TokenBuilderOptions): TokenVocabulary {
         const reachableRules = stream(GrammarUtils.getAllReachableRules(grammar, false));
@@ -92,6 +92,7 @@ export class PliTokenBuilder extends DefaultTokenBuilder {
                 return null;
             }
         }
+        token.START_CHARS_HINT = ['!', '|', '^', '¬'];
     }
 
 }

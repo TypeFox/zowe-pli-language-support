@@ -71,7 +71,7 @@ class Translator {
                     severity: err.severity
                 });
             } else {
-                throw err;
+                console.error('Encountered unexpected error during compiler options translation:', String(err));
             }
             
         }
@@ -201,7 +201,7 @@ translator.rule(['ATTRIBUTES', 'A', 'NOATTRIBUTES', 'NA'], (option, options) => 
         } else if (text === 'S' || text === 'SHORT') {
             identifiers = 'SHORT';
         } else {
-            throw new Error('Invalid attribute value. Expected FULL or SHORT');
+            throw new TranslationError(value.token, 'Invalid attribute value. Expected FULL or SHORT', 1);
         }
     }
     options.attributes = {
@@ -234,7 +234,7 @@ translator.rule(
     stringTranslate((options, value) => {
         const length = value.value.length;
         if (length !== 2) {
-            throw new Error('Expected two characters');
+            throw new TranslationError(value.token, 'Expected two characters', 1);
         }
         const start = value.value.charAt(0);
         const end = value.value.charAt(1);
