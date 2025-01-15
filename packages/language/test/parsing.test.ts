@@ -12,7 +12,7 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import { EmptyFileSystem, type LangiumDocument } from "langium";
 import { parseHelper } from "langium/test";
-import { createPliServices, PliProgram } from "../src";
+import { createPliServices, type PliProgram } from "../src";
 
 let services: ReturnType<typeof createPliServices>;
 let parse: ReturnType<typeof parseHelper<PliProgram>>;
