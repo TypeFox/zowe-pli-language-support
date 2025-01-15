@@ -1,6 +1,6 @@
 import { assertUnreachable } from "langium";
 import { isExpression, isNumberLiteral, isStringLiteral, Pl1AstType } from "../generated/ast";
-import { Base, MaximumPrecisions, Scale, ScaleMode, TypesDescriptions } from "./descriptions";
+import { Base, MaximumPrecisions, ScaleMode, TypesDescriptions } from "./descriptions";
 
 export type PliAstNode = Pl1AstType[keyof Pl1AstType];
 
@@ -8,6 +8,7 @@ export interface PliTypeInferer {
     inferType(node: PliAstNode): TypesDescriptions.Any | undefined;
 }
 
+type CompilerOptionRules = 'ans' | 'ibm';
 type OperandScaleAndBase = `${ScaleMode}_${Base}`;
 type BinaryOperatorPredicate = ({ op, lhs, rhs }: { op: ArithmeticOperator, lhs: TypesDescriptions.Arithmetic, rhs: TypesDescriptions.Arithmetic }) => boolean;
 type ResultCompute = ({ op, lhs, rhs }: { op: ArithmeticOperator, lhs: TypesDescriptions.Arithmetic, rhs: TypesDescriptions.Arithmetic }) => TypesDescriptions.Any;
@@ -21,7 +22,7 @@ type ArithmeticOperator = '+' | '-' | '*' | '/' | '**';
 export const DecimalToBinaryDigitsFactor = 3.32;
 
 
-const Table = applyArithmeticTypeRules([
+const Table = applyArithmeticTypeRules((option) => [
     /**
      * Table 1: Results of arithmetic operations for one or more FLOAT operands
      * @see https://www.ibm.com/docs/en/epfz/6.1?topic=operations-results-arithmetic#resarithoprt__fig16
@@ -35,6 +36,7 @@ const Table = applyArithmeticTypeRules([
     whenAtLeastOneFloatCaseOnOperator(['+', '-', '*', '/'], 'binary', 'decimal', 'binary', ({p1, p2}) => Math.max(p1, Math.ceil(p2*DecimalToBinaryDigitsFactor))),
     /** @todo special case B or C */
     whenAtLeastOneFloatCaseOnOperator(['**'], 'binary', 'decimal', 'binary', ({p1, p2}) => Math.max(p1, Math.ceil(p2*DecimalToBinaryDigitsFactor))),
+].concat(option === 'ans' ? [
     /**
      * Table 2. Results of arithmetic operations between two unscaled FIXED operands under RULES(ANS)
      * @see https://www.ibm.com/docs/en/epfz/6.1?topic=operations-results-arithmetic#resarithoprt__fig17
@@ -102,7 +104,7 @@ const Table = applyArithmeticTypeRules([
      * @todo what is q?
      */
     whenScaledFixedCaseOnOperatorANS(['**'], 'binary', 'decimal', 'decimal', ({p1, p2}) => Math.max(Math.ceil(p1 * DecimalToBinaryDigitsFactor), p2)),
-
+] : [
     /**
      * Table 4. Results of arithmetic operations between two FIXED operands under RULES(IBM)
      * @see https://www.ibm.com/docs/en/epfz/6.1?topic=operations-results-arithmetic#resarithoprt__fig19    
@@ -144,9 +146,11 @@ const Table = applyArithmeticTypeRules([
      * @todo what is q?
      */
     whenScaledFixedCaseOnOperatorIBM(['**'], 'binary', 'decimal', 'binary', ({p1, p2}) => Math.max(p1, Math.ceil(p2*DecimalToBinaryDigitsFactor))),
-]);
+]));
 
 interface QComputationVariables {
+    lhs: TypesDescriptions.Arithmetic;
+    rhs: TypesDescriptions.Arithmetic;
     p1: number;
     p2: number;
     q1: number;
@@ -179,7 +183,7 @@ function whenAtLeastOneFloatCaseOnOperator(whenOp: ArithmeticOperator[], whenLef
         then({ lhs, rhs }) {
             const { scale: { totalDigitsCount: p1 } } = lhs;
             const { scale: { totalDigitsCount: p2 } } = rhs;
-            const variablesForQ = createVariablesForQ(p1, p2, lhs.scale, rhs.scale);
+            const variablesForQ = createVariablesForQ(p1, p2, lhs, rhs);
             const variablesForP = createVariablesForP(variablesForQ, () => 0);
             return TypesDescriptions.Arithmetic({
                 scale: {
@@ -217,7 +221,7 @@ function whenUnscaledFixedCaseOnOperatorANS(whenOp: ArithmeticOperator[], whenLe
         then({lhs, rhs}) {
             const { scale: { totalDigitsCount: p1 } } = lhs;
             const { scale: { totalDigitsCount: p2 } } = rhs;
-            const variablesForQ = createVariablesForQ(p1, p2, lhs.scale, rhs.scale);
+            const variablesForQ = createVariablesForQ(p1, p2, lhs, rhs);
             const variablesForP = createVariablesForP(variablesForQ, thenQ);
             return TypesDescriptions.Arithmetic({
                 scale: {
@@ -256,7 +260,7 @@ function whenScaledFixedCaseOnOperatorANS(whenOp: ArithmeticOperator[], whenLeft
         then({lhs, rhs}) {
             const { scale: { totalDigitsCount: p1 } } = lhs;
             const { scale: { totalDigitsCount: p2 } } = rhs;
-            const variablesForQ = createVariablesForQ(p1, p2, lhs.scale, rhs.scale);
+            const variablesForQ = createVariablesForQ(p1, p2, lhs, rhs);
             const variablesForP = createVariablesForP(variablesForQ, thenQ);
             return TypesDescriptions.Arithmetic({
                 scale: {
@@ -293,7 +297,7 @@ function whenScaledFixedCaseOnOperatorIBM(whenOp: ArithmeticOperator[], whenLeft
         then({lhs, rhs}) {
             const { scale: { totalDigitsCount: p1 } } = lhs;
             const { scale: { totalDigitsCount: p2 } } = rhs;
-            const variablesForQ = createVariablesForQ(p1, p2, lhs.scale, rhs.scale);
+            const variablesForQ = createVariablesForQ(p1, p2, lhs, rhs);
             const variablesForP = createVariablesForP(variablesForQ, thenQ);
             return TypesDescriptions.Arithmetic({
                 scale: {
@@ -371,10 +375,12 @@ export class DefaultPliTypeInferer implements PliTypeInferer {
     }
 }
 
-function createVariablesForQ(p1: number, p2: number, lhs: Scale, rhs: Scale): QComputationVariables {
-    const q1 = lhs.mode === 'fixed' ? lhs.fractionalDigitsCount : 0;
-    const q2 = rhs.mode === 'fixed' ? rhs.fractionalDigitsCount : 0;
+function createVariablesForQ(p1: number, p2: number, lhs: TypesDescriptions.Arithmetic, rhs: TypesDescriptions.Arithmetic): QComputationVariables {
+    const q1 = lhs.scale.mode === 'fixed' ? lhs.scale.fractionalDigitsCount : 0;
+    const q2 = rhs.scale.mode === 'fixed' ? rhs.scale.fractionalDigitsCount : 0;
     return {
+        lhs,
+        rhs,
         p1,
         p2,
         q1,
@@ -411,7 +417,7 @@ function createVariablesForP(variables: QComputationVariables, q: ((vars: QCompu
     }
 }
 
-function applyArithmeticTypeRules(rules: ArithmeticTypeRule[]): Record<`${OperandScaleAndBase}${ArithmeticOperator}${OperandScaleAndBase}`, ResultCompute> {
+function applyArithmeticTypeRules(rules: (rulesOption: CompilerOptionRules) => ArithmeticTypeRule[]): Record<`${OperandScaleAndBase}${ArithmeticOperator}${OperandScaleAndBase}`, ResultCompute> {
     let result: Record<string, ResultCompute> = {};
 
     return result;
