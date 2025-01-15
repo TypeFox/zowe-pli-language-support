@@ -1,7 +1,7 @@
 /** @see https://www.ibm.com/docs/en/epfz/6.1?topic=attributes-nondata#ndatts__vari */
 
 /** Makes T partial except for properties P, they are required */
-type PartialPartial<T, P extends keyof T> = Partial<Omit<T, P>> & Required<Omit<T, Exclude<keyof T, P>>>;
+export type PartialPartial<T, P extends keyof T> = Partial<Omit<T, P>> & Required<Omit<T, Exclude<keyof T, P>>>;
 
 interface BaseTypeDescriptionProps {
     alignment: Alignment;
@@ -18,24 +18,24 @@ interface BaseTypeDescription extends BaseTypeDescriptionProps {
 }
 
 /** @see https://www.ibm.com/docs/en/epfz/6.1?topic=alignment-aligned-unaligned-attributes */
-type Alignment = { type: 'aligned', alignment: 1|2|4|8 } | { type: 'unaligned' };
+export type Alignment = { type: 'aligned', alignment: 1|2|4|8 } | { type: 'unaligned' };
 /** @see https://www.ibm.com/docs/en/epfz/6.1?topic=declarations-internal-external-attributes */
-type Scope = { type: 'internal' } | { type: 'external', environment: string };
+export type Scope = { type: 'internal' } | { type: 'external', environment: string };
 /** @see https://www.ibm.com/docs/en/epfz/6.1?topic=control-storage-classes-allocation-deallocation */
-type StorageClass = 'automatic' | 'static' | 'based' | 'controlled';
+export type StorageClass = 'automatic' | 'static' | 'based' | 'controlled';
 /** @see https://www.ibm.com/docs/en/epfz/6.1?topic=control-connected-nonconnected-attributes */
-type StorageConnection = 'connected' | 'nonconnected';
+export type StorageConnection = 'connected' | 'nonconnected';
 
 /** @see https://www.ibm.com/docs/en/epfz/6.1?topic=control-assignable-nonassignable-attributes */
-type Assignability = 'assignable' | 'nonassignable';
+export type Assignability = 'assignable' | 'nonassignable';
 /** @see https://www.ibm.com/docs/en/epfz/6.1?topic=control-defined-position-attributes */
-type StoragePosition = { //DEFINED variable [POSITION (position)]
+export type StoragePosition = { //DEFINED variable [POSITION (position)]
     variable: null;//TODO set to "Variable" AstNode
     position: null;//TODO set to "Expression" AstNode
 }
 
 /** @see https://www.ibm.com/docs/en/epfz/6.1?topic=control-normal-abnormal-attributes */
-type Volatility = 'normal' | 'abnormal';
+export type Volatility = 'normal' | 'abnormal';
 
 /* TODO for storage attributes:
 Parameter:
@@ -119,21 +119,28 @@ function isAreaTypeDescription(description: BaseTypeDescription): description is
 const ArithmeticType = 'arithmetic';
 type ArithmeticType = typeof ArithmeticType;
 
-type NumberMode = 'real' | 'complex';
-type ScaleMode = 'float' | 'fixed';
-type Base = 'binary' | 'decimal';
-type Precision = {
-    totalCount: number;
-    /** Attention: fractionalCount <= totalCount */
-    fractionalCount: number; 
-};
-type Sign = 'signed' | 'unsigned';
+export type NumberMode = 'real' | 'complex';
+export type Base = 'binary' | 'decimal';
+export type ScaleMode = 'fixed' | 'float';
+export type Scale = {
+    /** Formally known as `p`. */
+    totalDigitsCount: number;
+} & ({
+    mode: 'float';
+} | {
+    mode: 'fixed';
+    /**
+     * Formally known as `q`.
+     * Attention: fractionalDigitsCount <= totalDigitsCount
+     */
+    fractionalDigitsCount: number; 
+});
+export type Sign = 'signed' | 'unsigned';
 
 interface ArithmeticTypeDescriptionProps {
     mode: NumberMode;
-    scale: ScaleMode;
+    scale: Scale;
     base: Base;
-    precision: Precision;
     sign: Sign;
 }
 
@@ -149,7 +156,7 @@ interface ArithmeticTypeDescription extends BaseTypeDescription, ArithmeticTypeD
 //Float Binary	52	                23
 //Float Decimal	16	                6
 //TODO * The -Iongint Compiler option changes the default precision of fixed binary from 15 to 31.
-const DefaultPrecisions: Record<ScaleMode, Record<Base, number>> = {
+export const DefaultPrecisions: Record<ScaleMode, Record<Base, number>> = {
     float: {
         binary: 23,
         decimal: 6
@@ -160,10 +167,21 @@ const DefaultPrecisions: Record<ScaleMode, Record<Base, number>> = {
     }
 };
 
-function createArithmeticTypeDescription({ mode = 'real', scale = 'float', base: unit = 'decimal', precision, sign = 'signed', ...base }: Partial<ArithmeticTypeDescriptionProps>): ArithmeticTypeDescription {
-    precision ??= {
-        totalCount: DefaultPrecisions[scale][unit],
-        fractionalCount: 0
+export const MaximumPrecisions: Record<ScaleMode, Record<Base, number>> = {
+    float: {
+        binary: 52,
+        decimal: 16
+    },
+    fixed: {
+        binary: 31,
+        decimal: 18
+    }
+};
+
+function createArithmeticTypeDescription({ mode = 'real', scale, base: unit = 'decimal', sign = 'signed', ...base }: Partial<ArithmeticTypeDescriptionProps>): ArithmeticTypeDescription {
+    scale ??= {
+        mode: 'float',
+        totalDigitsCount: DefaultPrecisions['float'][unit],
     };
     return {
         type: ArithmeticType,
@@ -171,7 +189,6 @@ function createArithmeticTypeDescription({ mode = 'real', scale = 'float', base:
         mode,
         scale,
         base: unit,
-        precision,
         sign
     };
 }
@@ -254,7 +271,7 @@ function isLabelTypeDescription(description: BaseTypeDescription): description i
 const LocatorType = "locator";
 type LocatorType = typeof LocatorType;
 
-type LocatorKind = { type: 'pointer', size: 32|64 } 
+export type LocatorKind = { type: 'pointer', size: 32|64 } 
     | { type: 'handle', size: 32|64, structTypeName: string }
     | { type: 'offset', areaVariable: null };
 
@@ -330,7 +347,7 @@ function isOrdinalTypeDescription(description: BaseTypeDescription): description
 const PictureType = "picture";
 type PictureType = typeof PictureType;
 
-type PictureWideness = 'picture' | 'widepic';
+export type PictureWideness = 'picture' | 'widepic';
 
 interface PictureTypeDescriptionProps extends BaseTypeDescriptionProps {
     kind: PictureWideness;
@@ -359,8 +376,8 @@ function isPictureTypeDescription(description: BaseTypeDescription): description
 const StringType = "string";
 type StringType = typeof StringType;
 
-type StringKind = 'bit' | 'character' | 'graphic' | 'uchar' | 'widechar';
-type StringFormat = 'varying' | 'varying4' | 'varyingz' | 'nonvarying';
+export type StringKind = 'bit' | 'character' | 'graphic' | 'uchar' | 'widechar';
+export type StringFormat = 'varying' | 'varying4' | 'varyingz' | 'nonvarying';
 
 interface StringTypeDescriptionProps extends BaseTypeDescriptionProps {
     kind: StringKind;
