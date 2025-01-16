@@ -18,7 +18,7 @@ interface BaseTypeDescription extends BaseTypeDescriptionProps {
 }
 
 /** @see https://www.ibm.com/docs/en/epfz/6.1?topic=alignment-aligned-unaligned-attributes */
-export type Alignment = { type: 'aligned', alignment: 1|2|4|8 } | { type: 'unaligned' };
+export type Alignment = { type: 'aligned', alignment: 1 | 2 | 4 | 8 } | { type: 'unaligned' };
 /** @see https://www.ibm.com/docs/en/epfz/6.1?topic=declarations-internal-external-attributes */
 export type Scope = { type: 'internal' } | { type: 'external', environment: string };
 /** @see https://www.ibm.com/docs/en/epfz/6.1?topic=control-storage-classes-allocation-deallocation */
@@ -48,16 +48,16 @@ PARAMETER
 */
 
 function createBaseTypeDescription(type: TypeDescriptionType, { alignment, connection, scope, storage, volatility, position, assignability, variable }: Partial<BaseTypeDescriptionProps>): BaseTypeDescriptionProps {
-    if(!alignment) {
-        if(type === PictureType || type === StringType) {
+    if (!alignment) {
+        if (type === PictureType || type === StringType) {
             alignment = { type: 'unaligned' };
         } else {
             alignment = { type: 'aligned', alignment: 1 }; //TODO no documentation of default value for alignment
         }
     }
 
-    if(variable !== undefined) {
-        if(type !== EntryType && type !== FileType && type !== LabelType) {
+    if (variable !== undefined) {
+        if (type !== EntryType && type !== FileType && type !== LabelType) {
             variable = undefined;
         }
     }
@@ -67,8 +67,8 @@ function createBaseTypeDescription(type: TypeDescriptionType, { alignment, conne
     scope ??= { type: 'internal' };
     volatility ??= 'normal';
 
-    if(!storage) {
-        if(scope?.type === 'internal') {
+    if (!storage) {
+        if (scope?.type === 'internal') {
             storage = 'automatic';
         } else {
             storage = 'static';
@@ -133,7 +133,7 @@ export type Scale = {
      * Formally known as `q`.
      * Attention: fractionalDigitsCount <= totalDigitsCount
      */
-    fractionalDigitsCount: number; 
+    fractionalDigitsCount: number;
 });
 export type Sign = 'signed' | 'unsigned';
 
@@ -209,7 +209,7 @@ interface FileTypeDescription extends BaseTypeDescription, FileTypeDescriptionPr
     type: FileType;
 }
 
-function createFileTypeDescription({...base}: Partial<FileTypeDescriptionProps>): FileTypeDescription {
+function createFileTypeDescription({ ...base }: Partial<FileTypeDescriptionProps>): FileTypeDescription {
     return {
         type: FileType,
         ...createBaseTypeDescription(FileType, base)
@@ -271,8 +271,8 @@ function isLabelTypeDescription(description: BaseTypeDescription): description i
 const LocatorType = "locator";
 type LocatorType = typeof LocatorType;
 
-export type LocatorKind = { type: 'pointer', size: 32|64 } 
-    | { type: 'handle', size: 32|64, structTypeName: string }
+export type LocatorKind = { type: 'pointer', size: 32 | 64 }
+    | { type: 'handle', size: 32 | 64, structTypeName: string }
     | { type: 'offset', areaVariable: null };
 
 interface LocatorTypeDescriptionProps extends BaseTypeDescriptionProps {
@@ -389,7 +389,7 @@ interface StringTypeDescription extends BaseTypeDescription, StringTypeDescripti
     type: StringType;
 }
 
-function createStringTypeDescription({ kind, format, length, ...base }: PartialPartial<StringTypeDescriptionProps, 'length'|'kind'|'format'>): StringTypeDescription {
+function createStringTypeDescription({ kind, format, length, ...base }: PartialPartial<StringTypeDescriptionProps, 'length' | 'kind' | 'format'>): StringTypeDescription {
     return {
         type: StringType,
         ...createBaseTypeDescription(StringType, base),
@@ -427,7 +427,7 @@ function isTaskTypeDescription(description: BaseTypeDescription): description is
 }
 
 //--- all together ---
-type TypeDescription = 
+type TypeDescription =
     | AreaTypeDescription
     | ArithmeticTypeDescription
     | FileTypeDescription
