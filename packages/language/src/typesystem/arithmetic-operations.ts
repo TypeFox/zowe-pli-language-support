@@ -10,7 +10,7 @@ type ArithmeticTypeRule = {
     when: BinaryOperatorPredicate;
     then: ComputeOperationReturnType;
 };
-type ArithmeticOperator = '+' | '-' | '*' | '/' | '**';
+export type ArithmeticOperator = '+' | '-' | '*' | '/' | '**';
 
 /** Approximation of ln(10)/ln(2) */
 export const DecimalToBinaryDigitsFactor = 3.32;
