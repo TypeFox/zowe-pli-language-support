@@ -11,7 +11,7 @@
         "lint": "eslint src --ext ts",
         "langium:generate": "pnpm  --dir packages/language langium:generate",
         "langium:watch": "pnpm --dir packages/language langium:watch",
-        "test": "vitest"
+        "test": "vitest run"
     },
     "devDependencies": {
         "@types/node": "^18.19.70",

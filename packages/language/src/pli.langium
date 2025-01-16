@@ -593,25 +593,25 @@ Expression: BitOrExpression;
 // Note for expressions: Documentation uses '¬' to denote inversion or negation. The language actually uses '^'
 
 // Priority 7
-BitOrExpression infers Expression: BitAndExpression ({infer BitOrExpression.left=current} op=('|' | '¬' | '^') right=BitAndExpression)*;
+BitOrExpression infers Expression: BitAndExpression ({infer BinaryExpression.left=current} op=('|' | '¬' | '^') right=BitAndExpression)*;
 
 // Priority 6
-BitAndExpression infers Expression: CompExpression ({infer BitAndExpression.left=current} op='&' right=CompExpression)*;
+BitAndExpression infers Expression: CompExpression ({infer BinaryExpression.left=current} op='&' right=CompExpression)*;
 
 // Priority 5
-CompExpression infers Expression: ConcatExpression ({infer CompExpression.left=current} op=('<' | '¬<' | '<=' | '=' | '¬=' | '^=' | '<>' | '>=' | '>' | '¬>') right=ConcatExpression)*;
+CompExpression infers Expression: ConcatExpression ({infer BinaryExpression.left=current} op=('<' | '¬<' | '<=' | '=' | '¬=' | '^=' | '<>' | '>=' | '>' | '¬>') right=ConcatExpression)*;
 
 // Priority 4
-ConcatExpression infers Expression: AddExpression ({infer ConcatExpression.left=current} op=('||' | '!!') right=AddExpression)*;
+ConcatExpression infers Expression: AddExpression ({infer BinaryExpression.left=current} op=('||' | '!!') right=AddExpression)*;
 
 // Priority 3
-AddExpression infers Expression: MultExpression ({infer AddExpression.left=current} op=('+' | '-' ) right=MultExpression)*;
+AddExpression infers Expression: MultExpression ({infer BinaryExpression.left=current} op=('+' | '-' ) right=MultExpression)*;
 
 // Priority 2
-MultExpression infers Expression: ExpExpression ({infer MultExpression.left=current} op=('*' | '/' ) right=ExpExpression)*;
+MultExpression infers Expression: ExpExpression ({infer BinaryExpression.left=current} op=('*' | '/' ) right=ExpExpression)*;
 
 // Priority 1
-ExpExpression infers Expression: PrimaryExpression ({infer ExpExpression.left=current} op='**' right=PrimaryExpression)*;
+ExpExpression infers Expression: PrimaryExpression ({infer BinaryExpression.left=current} op='**' right=PrimaryExpression)*;
 
 PrimaryExpression infers Expression: 
     Literal
