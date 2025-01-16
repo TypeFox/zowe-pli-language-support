@@ -1,0 +1,51 @@
+{
+    "name": "pli-playground",
+    "description": "PL/I language playground",
+    "version": "0.0.1",
+    "type": "module",
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "scripts": {
+        "clean": "shx rm -fr *.tsbuildinfo out",
+        "build": "vite -c vite.config.ts build",
+        "preview": "vite -c vite.config.ts preview",
+        "build:clean": "npm run clean && npm run build",
+        "langium:generate": "langium generate",
+        "langium:watch": "langium generate --watch"
+    },
+    "dependencies": {
+        "@codingame/monaco-vscode-configuration-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-environment-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-explorer-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-files-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-keybindings-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-lifecycle-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-localization-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-remote-agent-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-search-result-default-extension": "~11.1.2",
+        "@codingame/monaco-vscode-search-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-secret-storage-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-storage-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-textmate-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-theme-defaults-default-extension": "~11.1.2",
+        "@codingame/monaco-vscode-theme-service-override": "~11.1.2",
+        "@codingame/monaco-vscode-views-service-override": "~11.1.2",
+        "@typefox/monaco-editor-react": "~6.1.0",
+        "langium": "3.2.0",
+        "lz-string": "~1.5.0",
+        "pli-language": "workspace:*",
+        "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@~11.1.2",
+        "monaco-editor-wrapper": "~6.1.0",
+        "monaco-languageclient": "~9.1.0",
+        "vscode": "npm:@codingame/monaco-vscode-api@~11.1.2",
+        "vscode-json-languageservice": "~5.4.2",
+        "vscode-languageclient": "~9.0.1",
+        "vscode-languageserver": "~9.0.1",
+        "vscode-uri": "~3.0.8",
+        "vscode-ws-jsonrpc": "~3.4.0"
+    },
+    "devDependencies": {
+        "vite": "~6.0.7"
+    }
+}
