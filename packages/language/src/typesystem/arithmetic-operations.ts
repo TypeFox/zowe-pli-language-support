@@ -1,12 +1,14 @@
-import { Base, MaximumPrecisions, ScaleMode, TypesDescriptions } from "./descriptions";
+import { Base, MaximumPrecisions, TypesDescriptions } from "./descriptions";
 
 type CompilerOptionRules = 'ans' | 'ibm';
-type OperandScaleAndBase = `${ScaleMode}_${Base}`;
 type BinaryOperatorPredicate = ({ op, lhs, rhs }: { op: ArithmeticOperator, lhs: TypesDescriptions.Arithmetic, rhs: TypesDescriptions.Arithmetic }) => boolean;
-type ResultCompute = ({ op, lhs, rhs }: { op: ArithmeticOperator, lhs: TypesDescriptions.Arithmetic, rhs: TypesDescriptions.Arithmetic }) => TypesDescriptions.Any;
+type ComputeOperationReturnType = ({ op, lhs, rhs }: { op: ArithmeticOperator, lhs: TypesDescriptions.Arithmetic, rhs: TypesDescriptions.Arithmetic }) => TypesDescriptions.Any|undefined;
 type ArithmeticTypeRule = {
+    whenOp: ArithmeticOperator[];
+    whenLeftBase: Base;
+    whenRightBase: Base;
     when: BinaryOperatorPredicate;
-    then: ResultCompute;
+    then: ComputeOperationReturnType;
 };
 type ArithmeticOperator = '+' | '-' | '*' | '/' | '**';
 
@@ -14,7 +16,7 @@ type ArithmeticOperator = '+' | '-' | '*' | '/' | '**';
 export const DecimalToBinaryDigitsFactor = 3.32;
 
 
-const Table = applyArithmeticTypeRules((option) => [
+export const createArithmeticOperationTable = (rulesOption: CompilerOptionRules) => applyRules([
     /**
      * Table 1: Results of arithmetic operations for one or more FLOAT operands
      * @see https://www.ibm.com/docs/en/epfz/6.1?topic=operations-results-arithmetic#resarithoprt__fig16
@@ -31,7 +33,7 @@ const Table = applyArithmeticTypeRules((option) => [
     whenAtLeastOneFloatCaseOnOperator(['+', '-', '*', '/'], 'binary', 'decimal', 'binary', ({p1, p2}) => Math.max(p1, Math.ceil(p2*DecimalToBinaryDigitsFactor))),
     /** @todo special case B or C */
     whenAtLeastOneFloatCaseOnOperator(['**'], 'binary', 'decimal', 'binary', ({p1, p2}) => Math.max(p1, Math.ceil(p2*DecimalToBinaryDigitsFactor))),
-].concat(option === 'ans' ? [
+].concat(rulesOption === 'ans' ? [
     /**
      * Table 2. Results of arithmetic operations between two unscaled FIXED operands under RULES(ANS)
      * @see https://www.ibm.com/docs/en/epfz/6.1?topic=operations-results-arithmetic#resarithoprt__fig17
@@ -166,8 +168,11 @@ interface PComputationVariables extends QComputationVariables {
 
 function whenAtLeastOneFloatCaseOnOperator(whenOp: ArithmeticOperator[], whenLeftBase: Base, whenRightBase: Base, resultBase: Base, thenP: (variables: PComputationVariables) => number): ArithmeticTypeRule {
     return {
-        when({ op, lhs, rhs }) {
-            return whenOp.includes(op) && hasAnyFloatOperands(lhs, rhs) && lhs.base === whenLeftBase && rhs.base === whenRightBase;
+        whenOp,
+        whenLeftBase,
+        whenRightBase,
+        when({ lhs, rhs }) {
+            return lhs.scale.mode === 'float' || rhs.scale.mode === 'float';
         },
         then({ lhs, rhs }) {
             const { scale: { totalDigitsCount: p1 } } = lhs;
@@ -198,14 +203,14 @@ function whenAtLeastOneFloatCaseOnOperator(whenOp: ArithmeticOperator[], whenLef
  */
 function whenUnscaledFixedCaseOnOperatorANS(whenOp: ArithmeticOperator[], whenLeftBase: Base, whenRightBase: Base, resultBase: Base, thenP: (variables: PComputationVariables) => number, thenQ?: (variables: QComputationVariables) => number): ArithmeticTypeRule {
     return {
-        when({op, lhs, rhs}) {
-            return whenOp.includes(op)
+        whenOp,
+        whenLeftBase,
+        whenRightBase,
+        when({lhs, rhs}) {
             //for fixed
-            && lhs.scale.mode === 'fixed' && rhs.scale.mode === 'fixed'
-            //for unscaled
-            && lhs.scale.fractionalDigitsCount === 0 && rhs.scale.fractionalDigitsCount === 0
-            //for given bases
-            && lhs.base === whenLeftBase && rhs.base === whenRightBase;
+            return lhs.scale.mode === 'fixed' && rhs.scale.mode === 'fixed'
+                //for unscaled
+                && lhs.scale.fractionalDigitsCount === 0 && rhs.scale.fractionalDigitsCount === 0;
         },
         then({lhs, rhs}) {
             const { scale: { totalDigitsCount: p1 } } = lhs;
@@ -237,14 +242,13 @@ function whenUnscaledFixedCaseOnOperatorANS(whenOp: ArithmeticOperator[], whenLe
  */
 function whenScaledFixedCaseOnOperatorANS(whenOp: ArithmeticOperator[], whenLeftBase: Base, whenRightBase: Base, resultBase: Base, thenP: (variables: PComputationVariables) => number, thenQ?: (variables: QComputationVariables) => number): ArithmeticTypeRule {
     return {
-        when({op, lhs, rhs}) {
-            return whenOp.includes(op)
-            //for fixed
-            && lhs.scale.mode === 'fixed' && rhs.scale.mode === 'fixed'
-            //for at least one scaled
-            && (lhs.scale.fractionalDigitsCount !== 0 || rhs.scale.fractionalDigitsCount !== 0)
-            //for given bases
-            && lhs.base === whenLeftBase && rhs.base === whenRightBase;
+        whenOp,
+        whenLeftBase,
+        whenRightBase,
+        when({lhs, rhs}) {
+            return lhs.scale.mode === 'fixed' && rhs.scale.mode === 'fixed'
+                //for at least one scaled
+                && (lhs.scale.fractionalDigitsCount !== 0 || rhs.scale.fractionalDigitsCount !== 0);
         },
         then({lhs, rhs}) {
             const { scale: { totalDigitsCount: p1 } } = lhs;
@@ -276,12 +280,11 @@ function whenScaledFixedCaseOnOperatorANS(whenOp: ArithmeticOperator[], whenLeft
  */
 function whenScaledFixedCaseOnOperatorIBM(whenOp: ArithmeticOperator[], whenLeftBase: Base, whenRightBase: Base, resultBase: Base, thenP: (variables: PComputationVariables) => number, thenQ?: (variables: QComputationVariables) => number): ArithmeticTypeRule {
     return {
-        when({op, lhs, rhs}) {
-            return whenOp.includes(op)
-            //for fixed
-            && lhs.scale.mode === 'fixed' && rhs.scale.mode === 'fixed'
-            //for given bases
-            && lhs.base === whenLeftBase && rhs.base === whenRightBase;
+        whenOp,
+        whenLeftBase,
+        whenRightBase,
+        when({lhs, rhs}) {
+            return lhs.scale.mode === 'fixed' && rhs.scale.mode === 'fixed';
         },
         then({lhs, rhs}) {
             const { scale: { totalDigitsCount: p1 } } = lhs;
@@ -344,11 +347,39 @@ function createVariablesForP(variables: QComputationVariables, q: ((vars: QCompu
     }
 }
 
-function applyArithmeticTypeRules(rules: (rulesOption: CompilerOptionRules) => ArithmeticTypeRule[]): Record<`${OperandScaleAndBase}${ArithmeticOperator}${OperandScaleAndBase}`, ResultCompute> {
-    let result: Record<string, ResultCompute> = {};
+type OperationType = `${Base}${ArithmeticOperator}${Base}`;
 
-    return result;
+function applyRules(rules: ArithmeticTypeRule[]): ComputeOperationReturnType {
+    let intermediate: Record<string, ArithmeticTypeRule[]> = {};
+    for (const rule of rules) {
+        for (const op of rule.whenOp) {
+            const key: OperationType = `${rule.whenLeftBase}${op}${rule.whenRightBase}`;
+            if(!(key in intermediate)) {
+                intermediate[key] = [];
+            }
+            intermediate[key].push(rule);
+        }
+    }
+    let table: Record<string, ComputeOperationReturnType> = {};
+    for (const [key, keyRules] of Object.entries(intermediate)) {
+        table[key] = aggregateRules(keyRules);
+    }
+    return (args) => {
+        const key: OperationType = `${args.lhs.base}${args.op}${args.rhs.base}`;
+        if(key in table) {
+            return table[key](args);
+        }
+        return undefined;
+    };
 }
-function hasAnyFloatOperands(lhs: TypesDescriptions.Arithmetic, rhs: TypesDescriptions.Arithmetic) {
-    return lhs.scale.mode === 'float' || rhs.scale.mode === 'float';
+
+function aggregateRules(rules: ArithmeticTypeRule[]): ComputeOperationReturnType {
+    return ({lhs, rhs, op}) => {
+        for (const rule of rules) {
+            if(rule.when({op, lhs, rhs})) {
+                return rule.then({ op, lhs, rhs });
+            }
+        }
+        return undefined;
+    };
 }
