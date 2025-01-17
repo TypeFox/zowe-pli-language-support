@@ -48,7 +48,7 @@ export const createArithmeticOperationTable = (rulesOption: CompilerOptionRules)
     //## binary only
     whenUnscaledFixedCaseOnOperatorANS(['+', '-'], 'binary', 'binary', 'binary', ({ p1, p2 }) => 1 + Math.max(p1, p2)),
     whenUnscaledFixedCaseOnOperatorANS(['*'], 'binary', 'binary', 'binary', ({ p1, p2 }) => 1 + p1 + p2),
-    whenUnscaledFixedCaseOnOperatorANS(['*'], 'binary', 'binary', 'binary', ({ p1, p2 }) => 1 + p1 + p2),
+    whenUnscaledFixedCaseOnOperatorANS(['/'], 'binary', 'binary', 'binary', ({ p1, p2 }) => 1 + p1 + p2),
     /** @todo special case B */
     whenUnscaledFixedCaseOnOperatorANS(['**'], 'binary', 'binary', 'binary', ({ p1, p2 }) => Math.max(p1, p2)),
     //## decimal, then binary
@@ -94,8 +94,7 @@ export const createArithmeticOperationTable = (rulesOption: CompilerOptionRules)
     whenScaledFixedCaseOnOperatorANS(['+', '-'], 'binary', 'decimal', 'decimal', ({ p2, w, q2, q }) => 1 + Math.max(w, p2 - q2) + q, ({ q2 }) => q2),
     //ATTENTION! Broken IBM documentation here for Q!
     whenScaledFixedCaseOnOperatorANS(['*'], 'binary', 'decimal', 'decimal', ({ p2, w }) => 1 + p2 + w, ({ q2 }) => q2),
-    //ATTENTION! Broken IBM documentation here for Q!
-    whenScaledFixedCaseOnOperatorANS(['/'], 'binary', 'decimal', 'decimal', ({ N }) => N, ({ N, w, q2 }) => N - w + q2),
+    whenScaledFixedCaseOnOperatorANS(['/'], 'binary', 'decimal', 'decimal', ({ N }) => N, ({ N, w, q2 }) => N - w - q2),
     /**
      * @todo special case B
      * @todo what is q?

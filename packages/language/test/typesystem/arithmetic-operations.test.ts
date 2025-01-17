@@ -17,6 +17,20 @@ function arithmetic(scaleMode: ScaleMode, base: Base, p: number, q: number = 0) 
     });
 }
 
+type ExpectWhenType = (lhs: TypesDescriptions.Arithmetic, op: ArithmeticOperator, rhs: TypesDescriptions.Arithmetic, expectedScaleMode: ScaleMode, expectedBase: Base, expectedP: number, expectedQ?: number) => void;
+
+function expectArithmeticWhenFactory(inferArithmeticOp: ComputeOperationReturnType): ExpectWhenType {
+    return function expectArithmeticWhen(lhs: TypesDescriptions.Arithmetic, op: ArithmeticOperator, rhs: TypesDescriptions.Arithmetic, expectedScaleMode: ScaleMode, expectedBase: Base, expectedP: number, expectedQ?: number) {
+        const returnType = inferArithmeticOp({ lhs, rhs, op }) as TypesDescriptions.Arithmetic;
+        expect(returnType.scale.mode).toBe(expectedScaleMode);
+        expect(returnType.base).toBe(expectedBase);
+        expect(returnType.scale.totalDigitsCount).toBe(expectedP);
+        if (returnType.scale.mode === "fixed") {
+            expect(returnType.scale.fractionalDigitsCount).toBe(expectedQ);
+        }
+    };
+}
+
 describe('Arithmetic operations', () => {
     const floatDecimal10 = arithmetic('float', 'decimal', 10);
     const floatDecimal20 = arithmetic('float', 'decimal', 20);
@@ -24,28 +38,28 @@ describe('Arithmetic operations', () => {
     const floatBinary10 = arithmetic('float', 'binary', 10);
     const floatBinary20 = arithmetic('float', 'binary', 20);
 
+    const fixedDecimal10_0 = arithmetic('fixed', 'decimal', 10, 0);
     const fixedDecimal20_0 = arithmetic('fixed', 'decimal', 20, 0);
     const fixedDecimal10_6 = arithmetic('fixed', 'decimal', 10, 6);
     const fixedDecimal20_10 = arithmetic('fixed', 'decimal', 20, 10);
 
     const fixedBinary20_0 = arithmetic('fixed', 'binary', 20, 0);
+    const fixedBinary35_0 = arithmetic('fixed', 'binary', 35, 0);
     const fixedBinary10_6 = arithmetic('fixed', 'binary', 10, 6);
     const fixedBinary20_10 = arithmetic('fixed', 'binary', 20, 10);
 
-    describe('Compiler-flag-unrelated - Table 1', () => {
-        let inferArithmeticOp: ComputeOperationReturnType;
+    describe('Compiler-flag-unrelated', () => {
+        /**
+         * This DESCRIBE is equivalent to Table 1 of the given link.
+         * @see https://www.ibm.com/docs/en/epfz/6.1?topic=operations-results-arithmetic#resarithoprt__fig16 
+         */
+        let expectArithmeticWhen: ExpectWhenType;
 
-        function expectArithmeticWhen(lhs: TypesDescriptions.Arithmetic, op: ArithmeticOperator, rhs: TypesDescriptions.Arithmetic, expectedScaleMode: ScaleMode, expectedBase: Base, expectedP: number, expectedQ?: number) {
-            const returnType = inferArithmeticOp({ lhs, rhs, op }) as TypesDescriptions.Arithmetic;
-            expect(returnType.scale.mode).toBe(expectedScaleMode);
-            expect(returnType.base).toBe(expectedBase);
-            expect(returnType.scale.totalDigitsCount).toBe(expectedP);
-            if (returnType.scale.mode === "fixed") {
-                expect(returnType.scale.fractionalDigitsCount).toBe(expectedQ);
-            }
-        }
-
-        beforeAll(() => { inferArithmeticOp = createArithmeticOperationTable('ans'); }); //should be same as 'ibm'
+        beforeAll(() => {
+            //should be same as 'ibm'
+            const inferArithmeticOp = createArithmeticOperationTable('ans');
+            expectArithmeticWhen = expectArithmeticWhenFactory(inferArithmeticOp);
+        });
 
         test('float decimal OP float decimal', () => {
             expectArithmeticWhen(floatDecimal10, '+', floatDecimal20, 'float', 'decimal', 20);
@@ -145,15 +159,103 @@ describe('Arithmetic operations', () => {
         });
     });
 
-    describe.skip('Compiler-flag RULES(ANS)', () => {
+    describe('Compiler-flag RULES(ANS)', () => {
         let inferArithmeticOp: ComputeOperationReturnType;
-        beforeAll(() => { inferArithmeticOp = createArithmeticOperationTable('ans'); });
+        let expectArithmeticWhen: ExpectWhenType;
 
+        beforeAll(() => {
+            inferArithmeticOp = createArithmeticOperationTable('ans');
+            expectArithmeticWhen = expectArithmeticWhenFactory(inferArithmeticOp);
+        });
+
+        describe('All operands are fixed with no scale, q=0', () => {
+            /**
+             * This DESCRIBE is equivalent to Table 2 (unscaled fixed)
+             * @see https://www.ibm.com/docs/en/epfz/6.1?topic=operations-results-arithmetic#resarithoprt__fig17 
+             */
+            test('fixed decimal OP fixed decimal', () => {
+                expectArithmeticWhen(fixedDecimal10_0, '+', fixedDecimal20_0, 'fixed', 'decimal', 21, 0);
+                expectArithmeticWhen(fixedDecimal10_0, '-', fixedDecimal10_0, 'fixed', 'decimal', 11, 0);
+                expectArithmeticWhen(fixedDecimal10_0, '*', fixedDecimal20_0, 'fixed', 'decimal', 31, 0);
+                expectArithmeticWhen(fixedDecimal20_0, '/', fixedDecimal10_0, 'fixed', 'decimal', 18, -2);
+                expectArithmeticWhen(fixedDecimal10_0, '**', fixedDecimal20_0, 'fixed', 'decimal', 20, 0);
+            });
+
+            test('fixed binary OP fixed binary', () => {
+                expectArithmeticWhen(fixedBinary20_0, '+', fixedBinary35_0, 'fixed', 'binary', 36, 0);
+                expectArithmeticWhen(fixedBinary35_0, '-', fixedBinary20_0, 'fixed', 'binary', 36, 0);
+                expectArithmeticWhen(fixedBinary20_0, '*', fixedBinary35_0, 'fixed', 'binary', 56, 0);
+                expectArithmeticWhen(fixedBinary20_0, '/', fixedBinary35_0, 'fixed', 'binary', 56, 0);
+                expectArithmeticWhen(fixedBinary20_0, '**', fixedBinary35_0, 'fixed', 'binary', 35, 0);
+            });
+
+            test('fixed decimal OP fixed binary', () => {
+                expectArithmeticWhen(fixedDecimal20_0, '+', fixedBinary35_0, 'fixed', 'binary', 69, 0);
+                expectArithmeticWhen(fixedDecimal10_0, '-', fixedBinary20_0, 'fixed', 'binary', 36, 0);
+                expectArithmeticWhen(fixedDecimal10_0, '*', fixedBinary35_0, 'fixed', 'binary', 71, 0);
+                expectArithmeticWhen(fixedDecimal20_0, '/', fixedBinary35_0, 'fixed', 'binary', 31, 0);
+                expectArithmeticWhen(fixedDecimal10_0, '**', fixedBinary35_0, 'fixed', 'binary', 35, 0);
+            });
+
+            test('fixed binary OP fixed decimal', () => {
+                expectArithmeticWhen(fixedBinary35_0, '+', fixedDecimal20_0, 'fixed', 'binary', 69, 0);
+                expectArithmeticWhen(fixedBinary20_0, '-', fixedDecimal10_0, 'fixed', 'binary', 36, 0);
+                expectArithmeticWhen(fixedBinary20_0, '*', fixedDecimal10_0, 'fixed', 'binary', 56, 0);
+                expectArithmeticWhen(fixedBinary35_0, '/', fixedDecimal20_0, 'fixed', 'binary', 31, 0);
+                expectArithmeticWhen(fixedBinary35_0, '**', fixedDecimal10_0, 'fixed', 'binary', 35, 0);
+            });
+        });
+
+        describe('All operands are fixed with at least one scale, q <> 0', () => {
+            /**
+             * This DESCRIBE is equivalent to Table 3 (scaled fixed)
+             * @see https://www.ibm.com/docs/en/epfz/6.1?topic=operations-results-arithmetic#resarithoprt__fig18
+             */
+            test('fixed decimal OP fixed decimal', () => {
+                expectArithmeticWhen(fixedDecimal10_6, '+', fixedDecimal20_10, 'fixed', 'decimal', 21, 10);
+                expectArithmeticWhen(fixedDecimal10_6, '-', fixedDecimal10_6, 'fixed', 'decimal', 11, 6);
+                expectArithmeticWhen(fixedDecimal10_6, '*', fixedDecimal20_10, 'fixed', 'decimal', 31, 16);
+                expectArithmeticWhen(fixedDecimal20_10, '/', fixedDecimal10_6, 'fixed', 'decimal', 18, 2);
+                /** @todo what is q? */
+                expectArithmeticWhen(fixedDecimal10_6, '**', fixedDecimal20_10, 'fixed', 'decimal', 20, 0);
+            });
+
+            test('fixed decimal OP fixed binary', () => {
+                expectArithmeticWhen(fixedDecimal10_6, '+', fixedBinary20_10, 'fixed', 'decimal', 14, 6);
+                expectArithmeticWhen(fixedDecimal10_6, '-', fixedBinary35_0, 'fixed', 'decimal', 18, 6);
+                expectArithmeticWhen(fixedDecimal20_10, '*', fixedBinary10_6, 'fixed', 'decimal', 25, 10);
+                expectArithmeticWhen(fixedDecimal20_10, '/', fixedBinary20_10, 'fixed', 'decimal', 18, 8);
+                /** @todo what is q? */
+                expectArithmeticWhen(fixedDecimal10_6, '**', fixedBinary10_6, 'fixed', 'decimal', 34, 0);
+            });
+
+            test('fixed binary OP fixed decimal', () => {
+                expectArithmeticWhen(fixedBinary20_10, '+', fixedDecimal10_6, 'fixed', 'decimal', 14, 6);
+                expectArithmeticWhen(fixedBinary35_0, '-', fixedDecimal10_6, 'fixed', 'decimal', 18, 6);
+                expectArithmeticWhen(fixedBinary10_6, '*', fixedDecimal20_10, 'fixed', 'decimal', 25, 10);
+                expectArithmeticWhen(fixedBinary20_10, '/', fixedDecimal20_10, 'fixed', 'decimal', 18, 1);
+                /** @todo what is q? */
+                expectArithmeticWhen(fixedBinary10_6, '**', fixedDecimal10_6, 'fixed', 'decimal', 34, 0);
+            });
+
+            test('fixed binary OP fixed decimal', () => {
+                /**
+                 * Reminder: this case is not supported by RULES(ANS).
+                 * @see appendix of table https://www.ibm.com/docs/en/epfz/6.1?topic=operations-results-arithmetic#resarithoprt__fig18
+                 * @todo shall we throw an error instead?
+                 */
+                const returnType = inferArithmeticOp({ lhs: fixedBinary20_10, op: '+', rhs: fixedBinary20_10});
+                expect(returnType).toBeUndefined();
+            });
+        });
     });
 
     describe.skip('Compiler-flag RULES(IBM)', () => {
-        let inferArithmeticOp: ComputeOperationReturnType;
-        beforeAll(() => { inferArithmeticOp = createArithmeticOperationTable('ibm'); });
+        let expectArithmeticWhen: ExpectWhenType;
 
+        beforeAll(() => {
+            const inferArithmeticOp = createArithmeticOperationTable('ibm');
+            expectArithmeticWhen = expectArithmeticWhenFactory(inferArithmeticOp);
+        });
     });
 });
