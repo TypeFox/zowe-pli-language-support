@@ -238,7 +238,7 @@ describe('Arithmetic operations', () => {
                 expectArithmeticWhen(fixedBinary10_6, '**', fixedDecimal10_6, 'fixed', 'decimal', 34, 0);
             });
 
-            test('fixed binary OP fixed decimal', () => {
+            test('fixed binary OP fixed binary', () => {
                 /**
                  * Reminder: this case is not supported by RULES(ANS).
                  * @see appendix of table https://www.ibm.com/docs/en/epfz/6.1?topic=operations-results-arithmetic#resarithoprt__fig18
@@ -250,12 +250,48 @@ describe('Arithmetic operations', () => {
         });
     });
 
-    describe.skip('Compiler-flag RULES(IBM)', () => {
+    describe('Compiler-flag RULES(IBM)', () => {
         let expectArithmeticWhen: ExpectWhenType;
 
         beforeAll(() => {
             const inferArithmeticOp = createArithmeticOperationTable('ibm');
             expectArithmeticWhen = expectArithmeticWhenFactory(inferArithmeticOp);
+        });
+
+        test('fixed decimal OP fixed decimal', () => {
+            expectArithmeticWhen(fixedDecimal20_10, '+', fixedDecimal10_6, 'fixed', 'decimal', 21, 10);
+            expectArithmeticWhen(fixedDecimal20_0, '-', fixedDecimal10_6, 'fixed', 'decimal', 27, 6);
+            expectArithmeticWhen(fixedDecimal20_10, '*', fixedDecimal10_6, 'fixed', 'decimal', 31, 16);
+            expectArithmeticWhen(fixedDecimal20_10, '/', fixedDecimal10_6, 'fixed', 'decimal', 18, 2);
+            /** @todo what is q? */
+            expectArithmeticWhen(fixedDecimal20_10, '**', fixedDecimal10_6, 'fixed', 'decimal', 20, 0);
+        });
+
+        test('fixed binary OP fixed binary', () => {
+            expectArithmeticWhen(fixedBinary20_10, '+', fixedBinary20_10, 'fixed', 'binary', 21, 10);
+            expectArithmeticWhen(fixedBinary20_0, '-', fixedBinary20_10, 'fixed', 'binary', 31, 10);
+            expectArithmeticWhen(fixedBinary20_10, '*', fixedBinary20_0, 'fixed', 'binary', 41, 10);
+            expectArithmeticWhen(fixedBinary20_0, '/', fixedBinary20_10, 'fixed', 'binary', 31, 1);
+            /** @todo what is q? */
+            expectArithmeticWhen(fixedBinary20_0, '**', fixedBinary20_10, 'fixed', 'binary', 20, 0);
+        });
+
+        test('fixed decimal OP fixed binary', () => {
+            expectArithmeticWhen(fixedDecimal20_10, '+', fixedBinary35_0, 'fixed', 'binary', 70, 34);
+            expectArithmeticWhen(fixedDecimal10_6, '-', fixedBinary10_6, 'fixed', 'binary', 36, 20);
+            expectArithmeticWhen(fixedDecimal20_10, '*', fixedBinary20_10, 'fixed', 'binary', 89, 44);
+            expectArithmeticWhen(fixedDecimal20_10, '/', fixedBinary10_6, 'fixed', 'binary', 31, -9);
+            /** @todo what is q? */
+            expectArithmeticWhen(fixedDecimal10_6, '**', fixedBinary20_10, 'fixed', 'binary', 34, 0);
+        });
+
+        test('fixed binary OP fixed decimal', () => {
+            expectArithmeticWhen(fixedBinary35_0, '+', fixedDecimal20_10, 'fixed', 'binary', 70, 34);
+            expectArithmeticWhen(fixedBinary10_6, '-', fixedDecimal10_6, 'fixed', 'binary', 36, 20);
+            expectArithmeticWhen(fixedBinary20_10, '*', fixedDecimal20_10, 'fixed', 'binary', 89, 44);
+            expectArithmeticWhen(fixedBinary10_6, '/', fixedDecimal20_10, 'fixed', 'binary', 31, -7);
+            /** @todo what is q? */
+            expectArithmeticWhen(fixedBinary20_10, '**', fixedDecimal10_6, 'fixed', 'binary', 34, 0);
         });
     });
 });

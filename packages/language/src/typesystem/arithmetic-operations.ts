@@ -134,7 +134,7 @@ export const createArithmeticOperationTable = (rulesOption: CompilerOptionRules)
      */
     whenScaledFixedCaseOnOperatorIBM(['**'], 'decimal', 'binary', 'binary', ({ p1, p2 }) => Math.max(Math.ceil(p1 * DecimalToBinaryDigitsFactor), p2)),
     //## binary, then decimal
-    whenScaledFixedCaseOnOperatorIBM(['+', '-'], 'binary', 'decimal', 'binary', ({ p1, t, u, q, q1 }) => 1 + Math.max(p1 - q1, t - u) + q, ({ s, q2 }) => Math.max(s, q2)),
+    whenScaledFixedCaseOnOperatorIBM(['+', '-'], 'binary', 'decimal', 'binary', ({ p1, t, u, q, q1 }) => 1 + Math.max(p1 - q1, t - u) + q, ({ s, q1, u }) => Math.max(s, q1, u)),
     whenScaledFixedCaseOnOperatorIBM(['*'], 'binary', 'decimal', 'binary', ({ p1, t }) => 1 + p1 + t, ({ u, q1 }) => q1 + u),
     whenScaledFixedCaseOnOperatorIBM(['/'], 'binary', 'decimal', 'binary', ({ M }) => M, ({ M, p1, q1, u }) => M - p1 + q1 - u),
     /**
