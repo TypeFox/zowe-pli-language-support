@@ -1,8 +1,8 @@
 import { Base, MaximumPrecisions, TypesDescriptions } from "./descriptions";
 
-type CompilerOptionRules = 'ans' | 'ibm';
+export type CompilerOptionRules = 'ans' | 'ibm';
+export type ComputeOperationReturnType = ({ op, lhs, rhs }: { op: ArithmeticOperator, lhs: TypesDescriptions.Arithmetic, rhs: TypesDescriptions.Arithmetic }) => TypesDescriptions.Any | undefined;
 type BinaryOperatorPredicate = ({ op, lhs, rhs }: { op: ArithmeticOperator, lhs: TypesDescriptions.Arithmetic, rhs: TypesDescriptions.Arithmetic }) => boolean;
-type ComputeOperationReturnType = ({ op, lhs, rhs }: { op: ArithmeticOperator, lhs: TypesDescriptions.Arithmetic, rhs: TypesDescriptions.Arithmetic }) => TypesDescriptions.Any | undefined;
 type ArithmeticTypeRule = {
     whenOp: ArithmeticOperator[];
     whenLeftBase: Base;
