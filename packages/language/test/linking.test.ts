@@ -44,7 +44,7 @@ describe('Linking tests', () => {
     describe('Declarations and labels', async () => {
         const text = `
  Control: procedure options(main);
-  call <|>A('ok'); // invoke the 'A' subroutine
+  call <|>A('ok!'); // invoke the 'A' subroutine
  end Control;
  <|A|>: procedure (VAR1);
  declare <|VAR1|> char(3);
