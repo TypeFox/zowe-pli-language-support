@@ -10,7 +10,7 @@
  */
 
 import { beforeAll, describe, test } from "vitest";
-import { EmptyFileSystem} from "langium";
+import { EmptyFileSystem } from "langium";
 import { ExpectedGoToDefinition, expectGoToDefinition } from "langium/test";
 import { createPliServices } from "../src";
 
@@ -32,16 +32,79 @@ ${expectedGoToDefinition.text}
 
         return _gotoDefinition({
             ...expectedGoToDefinition,
-            text
-        })
-    }
+            text,
+        });
+    };
 
     // activate the following if your linking test requires elements from a built-in library, for example
     await services.shared.workspace.WorkspaceManager.initializeWorkspace([]);
 });
 
-describe('Linking tests', () => {
-    describe('Declarations and labels', async () => {
+describe("Linking tests", () => {
+    describe("Label tests", async () => {
+        const text = `
+             <|OUTER|>: procedure options (main);
+                <|INNER|>: procedure;
+                    call <|>OUTER;
+                    OUTER: procedure;
+                        call <|>INNER;
+                        INNER: procedure;
+                            call <|>OUTER;
+                        END INNER;
+                    END OUTER;
+                END INNER;
+            end OUTER;
+        `;
+
+        test("Must find outer procedure label", async () => {
+            await gotoDefinition({
+                text: text,
+                index: 0,
+                rangeIndex: 0,
+            });
+        });
+
+        test("Must find outer procecure label in nested repeated procedure name", async () => {
+            await gotoDefinition({
+                text: text,
+                index: 1,
+                rangeIndex: 1,
+            });
+        });
+
+        /**
+         * Didrik: I'm unsure what the expected behavior on the mainframe is here.
+         */
+        test("Must find most outer procedure label in nested identical procedure names (unsure)", async () => {
+            await gotoDefinition({
+                text: text,
+                index: 2,
+                rangeIndex: 0,
+            });
+        });
+    });
+
+    describe('Declaration tests', async () => {
+        test('Must find declaration in SELECT/WHEN construct', async () => {
+            // Taken from code_samples/PLI0001.pli
+            const text = `
+ SELECT (123); 
+    WHEN (123)
+    DO;
+        DCL <|BFSTRING|> CHAR(255);
+        PUT SKIP LIST(<|>BFSTRING);
+    END;
+ END;`
+
+            await gotoDefinition({
+                text: text,
+                index: 0,
+                rangeIndex: 0,
+            });
+        })
+    });
+
+    describe("Declarations and labels combined", async () => {
         const text = `
  Control: procedure options(main);
   call <|>A('ok!'); // invoke the 'A' subroutine
@@ -51,32 +114,32 @@ describe('Linking tests', () => {
  put skip list(V<|>AR1);
  end <|>A;`;
 
-        test('Must find declared procedure label in CALL', async () => {
+        test("Must find declared procedure label in CALL", async () => {
             await gotoDefinition({
                 text: text,
                 index: 0,
-                rangeIndex: 0
-            })
+                rangeIndex: 0,
+            });
         });
 
-        test('Must find declared procedure label in END', async () => {
+        test("Must find declared procedure label in END", async () => {
             await gotoDefinition({
                 text: text,
                 index: 2,
-                rangeIndex: 0
-            })
+                rangeIndex: 0,
+            });
         });
 
-        test('Must find declared variable', async () => {
+        test("Must find declared variable", async () => {
             await gotoDefinition({
                 text: text,
                 index: 1,
-                rangeIndex: 1
-            })
+                rangeIndex: 1,
+            });
         });
-    })
+    });
 
-    describe('Qualified names', async () => {
+    describe("Qualified names", async () => {
         const text = `
 0DCL 1  <|TWO_DIM_TABLE|>,
         2  <|TWO_DIM_TABLE_ENTRY|>               CHAR(32);
@@ -92,28 +155,28 @@ describe('Linking tests', () => {
  PUT (TWO_DIM_TABLE.<|>TWO_DIM_TABLE_ENTRY);
  PUT (TABLE_WITH_ARRAY.ARRAY_ENTRY(0).<|>TYPE#);`;
 
-        test('Must find table name in table', async () => {
+        test("Must find table name in table", async () => {
             await gotoDefinition({
                 text: text,
                 index: 0,
-                rangeIndex: 0
-            })
-        })
+                rangeIndex: 0,
+            });
+        });
 
-        test('Must find qualified name in table', async () => {
+        test("Must find qualified name in table", async () => {
             await gotoDefinition({
                 text: text,
                 index: 1,
-                rangeIndex: 1
-            })
-        })
+                rangeIndex: 1,
+            });
+        });
 
-        test('Must find qualified name in array', async () => {
+        test("Must find qualified name in array", async () => {
             await gotoDefinition({
                 text: text,
                 index: 2,
-                rangeIndex: 2
-            })
-        })
+                rangeIndex: 2,
+            });
+        });
     });
 });
