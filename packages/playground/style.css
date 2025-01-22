@@ -10,11 +10,11 @@
  */
 
 html {
-   background-color: #1F1F1F;
-   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-   font-size: 14px;
-   padding: 0;
-   margin: 0;
+    background-color: #1F1F1F;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    padding: 0;
+    margin: 0;
 }
 
 body {
@@ -38,7 +38,7 @@ body {
 }
 
 .share-info {
-    transition: opacity 0.3s; 
+    transition: opacity 0.3s;
     margin-right: 20px;
     opacity: 0.7;
 }
@@ -57,6 +57,36 @@ body {
     flex-direction: column;
 }
 
-#monaco-editor-root {
+#vscode-views-root {
     height: calc(100vh - 43px);
+}
+
+#editorsDiv {
+    flex: 1;
+    min-width: 0;
+}
+
+#editors {
+    display: none;
+}
+
+#monaco-root {
+    flex: 1;
+    height: 100%;
+}
+
+#panel {
+    flex: 1;
+    min-height: 0;
+}
+
+#workbench-container {
+    height: calc(100vh - 43px);
+    display: flex;
+    flex-direction: column
+}
+
+#workbench-top {
+    display: flex;
+    flex: 2;
 }

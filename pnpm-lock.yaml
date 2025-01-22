@@ -57,40 +57,13 @@ importers:
 
   packages/playground:
     dependencies:
-      '@codingame/monaco-vscode-configuration-service-override':
-        specifier: ~11.1.2
-        version: 11.1.2
-      '@codingame/monaco-vscode-environment-service-override':
-        specifier: ~11.1.2
-        version: 11.1.2
-      '@codingame/monaco-vscode-explorer-service-override':
-        specifier: ~11.1.2
-        version: 11.1.2
       '@codingame/monaco-vscode-files-service-override':
         specifier: ~11.1.2
         version: 11.1.2
       '@codingame/monaco-vscode-keybindings-service-override':
         specifier: ~11.1.2
         version: 11.1.2
-      '@codingame/monaco-vscode-lifecycle-service-override':
-        specifier: ~11.1.2
-        version: 11.1.2
-      '@codingame/monaco-vscode-localization-service-override':
-        specifier: ~11.1.2
-        version: 11.1.2
-      '@codingame/monaco-vscode-remote-agent-service-override':
-        specifier: ~11.1.2
-        version: 11.1.2
-      '@codingame/monaco-vscode-search-result-default-extension':
-        specifier: ~11.1.2
-        version: 11.1.2
-      '@codingame/monaco-vscode-search-service-override':
-        specifier: ~11.1.2
-        version: 11.1.2
-      '@codingame/monaco-vscode-secret-storage-service-override':
-        specifier: ~11.1.2
-        version: 11.1.2
-      '@codingame/monaco-vscode-storage-service-override':
+      '@codingame/monaco-vscode-markers-service-override':
         specifier: ~11.1.2
         version: 11.1.2
       '@codingame/monaco-vscode-textmate-service-override':
@@ -107,7 +80,7 @@ importers:
         version: 11.1.2
       '@typefox/monaco-editor-react':
         specifier: ~6.1.0
-        version: 6.1.0(weitimafh352gn6cpbgfxs5yg4)
+        version: 6.1.0(d3sw5lristatompllg7e6ykphm)
       langium:
         specifier: 3.2.0
         version: 3.2.0
@@ -119,10 +92,10 @@ importers:
         version: '@codingame/monaco-vscode-editor-api@11.1.2'
       monaco-editor-wrapper:
         specifier: ~6.1.0
-        version: 6.1.0(monaco-languageclient@9.1.0(wo5ly4cjhnj4lih4otlzcfv3nm))(vscode-ws-jsonrpc@3.4.0)
+        version: 6.1.0(monaco-languageclient@9.1.0(5ppedroh2i5jkkroustklvooxq))(vscode-ws-jsonrpc@3.4.0)
       monaco-languageclient:
         specifier: ~9.1.0
-        version: 9.1.0(wo5ly4cjhnj4lih4otlzcfv3nm)
+        version: 9.1.0(5ppedroh2i5jkkroustklvooxq)
       pli-language:
         specifier: workspace:*
         version: link:../language
@@ -145,6 +118,9 @@ importers:
         specifier: ~3.4.0
         version: 3.4.0
     devDependencies:
+      '@codingame/esbuild-import-meta-url-plugin':
+        specifier: ~1.0.2
+        version: 1.0.2
       vite:
         specifier: ~6.0.7
         version: 6.0.7(@types/node@18.19.70)
@@ -241,6 +217,9 @@ packages:
 
   '@chevrotain/utils@11.0.3':
     resolution: {integrity: sha512-YslZMgtJUyuMbZ+aKvfF3x1f5liK4mWNxghFRv7jqRR9C3R3fAOGTTKvxXDa2Y1s9zSbcpuO0cAxDYsc9SrXoQ==}
+
+  '@codingame/esbuild-import-meta-url-plugin@1.0.2':
+    resolution: {integrity: sha512-b1PjH6DVdTQd0WLO2R+b9oMlO7REyiAVbcx8weN1ZYiBSROuAy9MJ/j2NI4sxmFv9GK0wM9HRrBg6J2CBZ1xzQ==}
 
   '@codingame/monaco-vscode-api@11.1.2':
     resolution: {integrity: sha512-8UHz2uH103P+8eXDRAWo1e1PRfMN5F5dR4s/Mb9fX18Qzr8+/GkpWJHhT1t1cd5xY8XwIiH7YyMz6pL0aDOikw==}
@@ -383,6 +362,9 @@ packages:
   '@codingame/monaco-vscode-log-service-override@11.1.2':
     resolution: {integrity: sha512-ZCKEjZSq5b9ynl/X52cX+2NI2C+76aJWWkksduAtBS+QQg7uzymjtk98mTGmlSDlHzTSDrU3R4TdShZzBr/m7g==}
 
+  '@codingame/monaco-vscode-markers-service-override@11.1.2':
+    resolution: {integrity: sha512-wEjWBO/EHMLCsPRwAFu1ivnXvWPFBIa95aJuzNuJ+UrtD/9DjI4MmN88Az1+a3U9zo7UP+tcCGXbU+ClQm1Vaw==}
+
   '@codingame/monaco-vscode-model-service-override@11.1.2':
     resolution: {integrity: sha512-jFH2VvAiAK7Ytyzl4RMhOdARxrm/LOQFurXBtNhpTcimz3nINgixxh2+e0bviIe0BBs7ATsc9M//g6dA7S/FvQ==}
 
@@ -398,17 +380,11 @@ packages:
   '@codingame/monaco-vscode-quickaccess-service-override@11.1.2':
     resolution: {integrity: sha512-VT6F25bEtCvVE2kjBOfgiFOQ1V7YynlrhsHXFZEUzVTK0vFM13Za5otS/CTwgI/ml5FRDFjQKYJjKBAWmlPCaw==}
 
-  '@codingame/monaco-vscode-remote-agent-service-override@11.1.2':
-    resolution: {integrity: sha512-W4uwDp5sJg5dDINrESX6xOqVgLT+kP0t4a4CTbI8+WyiiU0tqdd2QunRbwpfq2VC7lgJclnmhSdgMAvLcmcBsg==}
-
   '@codingame/monaco-vscode-search-result-default-extension@11.1.2':
     resolution: {integrity: sha512-QmrcuEkxozWY2byVpJlf9eOk+WmVyJkRVJOYVVHkSH4ja+SnRpXNAfAw7KWhYK+Yag8SrApnh6UwRhCitiVZYg==}
 
   '@codingame/monaco-vscode-search-service-override@11.1.2':
     resolution: {integrity: sha512-JYvJwUEo90bcCsSe7G704Af3nORsEXiJYkMVmHkyAM3hTXzDvQy9Lt/aMlri8h1mnX5PvSnriU+9m3L5X0PWPQ==}
-
-  '@codingame/monaco-vscode-secret-storage-service-override@11.1.2':
-    resolution: {integrity: sha512-tKji5tMF+O6MUBBYmjbnqGwUlrQR1R017pf7MJtXND/A3w3NGcmijQqrUdxPZzpKd6IB+ePhNFKowsvTNTlvyA==}
 
   '@codingame/monaco-vscode-standalone-json-language-features@11.1.2':
     resolution: {integrity: sha512-3UjcJpSjYmMoPshZjZDLCIB2hU+NVnYo9EsvZik3zpEgaXQzO+bZLPV7QrH8pufR1WAu/PZqHbqad/0lqPkT+A==}
@@ -1618,6 +1594,9 @@ packages:
   import-fresh@3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
     engines: {node: '>=6'}
+
+  import-meta-resolve@4.1.0:
+    resolution: {integrity: sha512-I6fiaX09Xivtk+THaMfAwnA3MVA5Big1WHF1Dfx9hFuvNIWpXnorlkzhcQf6ehrqQiiZECRt1poOAkPmer3ruw==}
 
   imurmurhash@0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
@@ -3105,6 +3084,11 @@ snapshots:
 
   '@chevrotain/utils@11.0.3': {}
 
+  '@codingame/esbuild-import-meta-url-plugin@1.0.2':
+    dependencies:
+      esbuild: 0.21.5
+      import-meta-resolve: 4.1.0
+
   '@codingame/monaco-vscode-api@11.1.2':
     dependencies:
       '@codingame/monaco-vscode-base-service-override': 11.1.2
@@ -3151,6 +3135,7 @@ snapshots:
       '@codingame/monaco-vscode-chat-interactive-notebook-search-terminal-common': 11.1.2
       marked: 14.0.0
       vscode: '@codingame/monaco-vscode-api@11.1.2'
+    optional: true
 
   '@codingame/monaco-vscode-chat-interactive-notebook-search-terminal-common@11.1.2':
     dependencies:
@@ -3158,6 +3143,7 @@ snapshots:
       '@codingame/monaco-vscode-chat-notebook-common': 11.1.2
       marked: 14.0.0
       vscode: '@codingame/monaco-vscode-api@11.1.2'
+    optional: true
 
   '@codingame/monaco-vscode-chat-notebook-common@11.1.2':
     dependencies:
@@ -3168,6 +3154,7 @@ snapshots:
       '@codingame/monaco-vscode-chat-notebook-terminal-common': 11.1.2
       marked: 14.0.0
       vscode: '@codingame/monaco-vscode-api@11.1.2'
+    optional: true
 
   '@codingame/monaco-vscode-chat-notebook-terminal-common@11.1.2':
     dependencies:
@@ -3179,6 +3166,7 @@ snapshots:
       '@xterm/addon-webgl': 0.19.0-beta.96(@xterm/xterm@5.6.0-beta.96)
       '@xterm/xterm': 5.6.0-beta.96
       vscode: '@codingame/monaco-vscode-api@11.1.2'
+    optional: true
 
   '@codingame/monaco-vscode-chat-notebook-terminal-testing-common@11.1.2(@xterm/xterm@5.6.0-beta.96)':
     dependencies:
@@ -3191,6 +3179,7 @@ snapshots:
       vscode: '@codingame/monaco-vscode-api@11.1.2'
     transitivePeerDependencies:
       - '@xterm/xterm'
+    optional: true
 
   '@codingame/monaco-vscode-comments-extensions-common@11.1.2':
     dependencies:
@@ -3226,6 +3215,7 @@ snapshots:
   '@codingame/monaco-vscode-explorer-service-override@11.1.2':
     dependencies:
       vscode: '@codingame/monaco-vscode-api@11.1.2'
+    optional: true
 
   '@codingame/monaco-vscode-extensions-service-override@11.1.2':
     dependencies:
@@ -3336,6 +3326,7 @@ snapshots:
   '@codingame/monaco-vscode-lifecycle-service-override@11.1.2':
     dependencies:
       vscode: '@codingame/monaco-vscode-api@11.1.2'
+    optional: true
 
   '@codingame/monaco-vscode-localization-service-override@11.1.2':
     dependencies:
@@ -3344,6 +3335,10 @@ snapshots:
   '@codingame/monaco-vscode-log-service-override@11.1.2':
     dependencies:
       '@codingame/monaco-vscode-environment-service-override': 11.1.2
+      vscode: '@codingame/monaco-vscode-api@11.1.2'
+
+  '@codingame/monaco-vscode-markers-service-override@11.1.2':
+    dependencies:
       vscode: '@codingame/monaco-vscode-api@11.1.2'
 
   '@codingame/monaco-vscode-model-service-override@11.1.2':
@@ -3367,23 +3362,16 @@ snapshots:
     dependencies:
       vscode: '@codingame/monaco-vscode-api@11.1.2'
 
-  '@codingame/monaco-vscode-remote-agent-service-override@11.1.2':
-    dependencies:
-      '@codingame/monaco-vscode-environment-service-override': 11.1.2
-      vscode: '@codingame/monaco-vscode-api@11.1.2'
-
   '@codingame/monaco-vscode-search-result-default-extension@11.1.2':
     dependencies:
       vscode: '@codingame/monaco-vscode-api@11.1.2'
+    optional: true
 
   '@codingame/monaco-vscode-search-service-override@11.1.2':
     dependencies:
       '@codingame/monaco-vscode-chat-interactive-notebook-search-common': 11.1.2
       vscode: '@codingame/monaco-vscode-api@11.1.2'
-
-  '@codingame/monaco-vscode-secret-storage-service-override@11.1.2':
-    dependencies:
-      vscode: '@codingame/monaco-vscode-api@11.1.2'
+    optional: true
 
   '@codingame/monaco-vscode-standalone-json-language-features@11.1.2':
     dependencies:
@@ -3403,6 +3391,7 @@ snapshots:
   '@codingame/monaco-vscode-storage-service-override@11.1.2':
     dependencies:
       vscode: '@codingame/monaco-vscode-api@11.1.2'
+    optional: true
 
   '@codingame/monaco-vscode-textmate-service-override@11.1.2':
     dependencies:
@@ -3729,11 +3718,11 @@ snapshots:
 
   '@sinclair/typebox@0.27.8': {}
 
-  '@typefox/monaco-editor-react@6.1.0(weitimafh352gn6cpbgfxs5yg4)':
+  '@typefox/monaco-editor-react@6.1.0(d3sw5lristatompllg7e6ykphm)':
     dependencies:
       monaco-editor: '@codingame/monaco-vscode-editor-api@11.1.2'
-      monaco-editor-wrapper: 6.1.0(monaco-languageclient@9.1.0(wo5ly4cjhnj4lih4otlzcfv3nm))(vscode-ws-jsonrpc@3.4.0)
-      monaco-languageclient: 9.1.0(wo5ly4cjhnj4lih4otlzcfv3nm)
+      monaco-editor-wrapper: 6.1.0(monaco-languageclient@9.1.0(5ppedroh2i5jkkroustklvooxq))(vscode-ws-jsonrpc@3.4.0)
+      monaco-languageclient: 9.1.0(5ppedroh2i5jkkroustklvooxq)
       react: 19.0.0
       vscode: '@codingame/monaco-vscode-api@11.1.2'
       vscode-ws-jsonrpc: 3.4.0
@@ -4085,28 +4074,35 @@ snapshots:
     dependencies:
       '@xterm/xterm': 5.6.0-beta.96
       js-base64: 3.7.7
+    optional: true
 
   '@xterm/addon-image@0.9.0-beta.96(@xterm/xterm@5.6.0-beta.96)':
     dependencies:
       '@xterm/xterm': 5.6.0-beta.96
+    optional: true
 
   '@xterm/addon-search@0.16.0-beta.96(@xterm/xterm@5.6.0-beta.96)':
     dependencies:
       '@xterm/xterm': 5.6.0-beta.96
+    optional: true
 
   '@xterm/addon-serialize@0.14.0-beta.96(@xterm/xterm@5.6.0-beta.96)':
     dependencies:
       '@xterm/xterm': 5.6.0-beta.96
+    optional: true
 
   '@xterm/addon-unicode11@0.9.0-beta.96(@xterm/xterm@5.6.0-beta.96)':
     dependencies:
       '@xterm/xterm': 5.6.0-beta.96
+    optional: true
 
   '@xterm/addon-webgl@0.19.0-beta.96(@xterm/xterm@5.6.0-beta.96)':
     dependencies:
       '@xterm/xterm': 5.6.0-beta.96
+    optional: true
 
-  '@xterm/xterm@5.6.0-beta.96': {}
+  '@xterm/xterm@5.6.0-beta.96':
+    optional: true
 
   acorn-jsx@5.3.2(acorn@8.14.0):
     dependencies:
@@ -4769,6 +4765,8 @@ snapshots:
       parent-module: 1.0.1
       resolve-from: 4.0.0
 
+  import-meta-resolve@4.1.0: {}
+
   imurmurhash@0.1.4: {}
 
   inflight@1.0.6:
@@ -4813,7 +4811,8 @@ snapshots:
     dependencies:
       '@isaacs/cliui': 8.0.2
 
-  js-base64@3.7.7: {}
+  js-base64@3.7.7:
+    optional: true
 
   js-tokens@9.0.1: {}
 
@@ -5036,7 +5035,7 @@ snapshots:
       pkg-types: 1.3.1
       ufo: 1.5.4
 
-  monaco-editor-wrapper@6.1.0(monaco-languageclient@9.1.0(wo5ly4cjhnj4lih4otlzcfv3nm))(vscode-ws-jsonrpc@3.4.0):
+  monaco-editor-wrapper@6.1.0(monaco-languageclient@9.1.0(5ppedroh2i5jkkroustklvooxq))(vscode-ws-jsonrpc@3.4.0):
     dependencies:
       '@codingame/monaco-vscode-chat-extensions-notebook-task-terminal-testing-common': 11.1.2
       '@codingame/monaco-vscode-configuration-service-override': 11.1.2
@@ -5062,13 +5061,13 @@ snapshots:
       '@codingame/monaco-vscode-views-service-override': 11.1.2
       '@codingame/monaco-vscode-workbench-service-override': 11.1.2
       monaco-editor: '@codingame/monaco-vscode-editor-api@11.1.2'
-      monaco-languageclient: 9.1.0(wo5ly4cjhnj4lih4otlzcfv3nm)
+      monaco-languageclient: 9.1.0(5ppedroh2i5jkkroustklvooxq)
       vscode: '@codingame/monaco-vscode-api@11.1.2'
       vscode-languageclient: 9.0.1
       vscode-languageserver-protocol: 3.17.5
       vscode-ws-jsonrpc: 3.4.0
 
-  monaco-languageclient@9.1.0(wo5ly4cjhnj4lih4otlzcfv3nm):
+  monaco-languageclient@9.1.0(5ppedroh2i5jkkroustklvooxq):
     dependencies:
       '@codingame/monaco-vscode-api': 11.1.2
       '@codingame/monaco-vscode-configuration-service-override': 11.1.2
@@ -5113,6 +5112,7 @@ snapshots:
       '@codingame/monaco-vscode-language-pack-zh-hant': 11.1.2
       '@codingame/monaco-vscode-layout-service-override': 11.1.2
       '@codingame/monaco-vscode-lifecycle-service-override': 11.1.2
+      '@codingame/monaco-vscode-markers-service-override': 11.1.2
       '@codingame/monaco-vscode-monarch-service-override': 11.1.2
       '@codingame/monaco-vscode-python-default-extension': 11.1.2
       '@codingame/monaco-vscode-quickaccess-service-override': 11.1.2

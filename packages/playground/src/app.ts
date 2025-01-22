@@ -27,7 +27,9 @@ export async function startClient() {
         }
         const config = await setupClient(content);
         wrapper = new MonacoEditorLanguageClientWrapper();
-        wrapper.initAndStart(config);
+        await wrapper.init(config);
+        const element = document.getElementById('monaco-root')!;
+        wrapper.start(element);
     } catch (e) {
         console.log(e);
     }

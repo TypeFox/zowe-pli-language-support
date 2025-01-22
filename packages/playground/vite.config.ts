@@ -1,24 +1,33 @@
 import path from 'path';
-import { defineConfig } from 'vite';
+import importMetaUrlPlugin from '@codingame/esbuild-import-meta-url-plugin';
 
-export default defineConfig(({}) => {
-    return {
-        build: {
-            target: 'ES2022',
-            rollupOptions: {
-                input: {
-                    index: path.resolve(__dirname, 'index.html')
-                }
-            },
-            emptyOutDir: false,
-            assetsInlineLimit: 0,
-            outDir: path.resolve(__dirname, 'out')
+export default {
+    build: {
+        target: 'ES2022',
+        rollupOptions: {
+            input: {
+                index: path.resolve(__dirname, 'index.html')
+            }
         },
-        worker: {
-            format: 'es'
+        emptyOutDir: false,
+        assetsInlineLimit: 0,
+        outDir: path.resolve(__dirname, 'out')
+    },
+    worker: {
+        format: 'es'
+    },
+    esbuild: {
+        minifySyntax: false
+    },
+    optimizeDeps: {
+        esbuildOptions: {
+            plugins: [
+                importMetaUrlPlugin
+            ]
         },
-        esbuild: {
-            minifySyntax: false
-        }
-    };
-});
+        include: [
+            'vscode-textmate',
+            'vscode-oniguruma'
+        ]
+    },
+};
