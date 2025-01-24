@@ -9,22 +9,41 @@
  *
  */
 
-import { TokenType, TokenVocabulary } from "chevrotain";
-import { DefaultTokenBuilder, Grammar, GrammarUtils, RegExpUtils, stream, TokenBuilderOptions } from "langium";
+import { CustomPatternMatcherFunc, Lexer, TokenPattern, TokenType, TokenVocabulary } from "chevrotain";
+import { AstUtils, Grammar, GrammarAST, GrammarUtils, LexingDiagnostic, LexingReport, RegExpUtils, Stream, stream, TokenBuilder, TokenBuilderOptions } from "langium";
+import { isRegExp } from "util/types";
 
-export class PliTokenBuilder extends DefaultTokenBuilder {
+export class PliTokenBuilder implements TokenBuilder {
 
-    override buildTokens(grammar: Grammar, options?: TokenBuilderOptions): TokenVocabulary {
-        const reachableRules = stream(GrammarUtils.getAllReachableRules(grammar, false));
-        const terminalTokens: TokenType[] = this.buildTerminalTokens(reachableRules);
-        const tokens: TokenType[] = this.buildKeywordTokens(reachableRules, terminalTokens, options);
-        const id = terminalTokens.find(e => e.name === 'ID')!;
+    /**
+     * The list of diagnostics stored during the lexing process of a single text.
+     */
+    protected diagnostics: LexingDiagnostic[] = [];
 
-        for (const keywordToken of tokens) {
-            if (/[a-zA-Z]/.test(keywordToken.name)) {
-                keywordToken.CATEGORIES = [id];
+    private partition<T>(array: T[], predicate: (item: T) => boolean): [T[], T[]] {
+        const left: T[] = [];
+        const right: T[] = [];
+        for (const item of array) {
+            if(predicate(item)) {
+                left.push(item);
+            } else {
+                right.push(item);
             }
         }
+        return [left, right];
+    }
+
+    buildTokens(grammar: Grammar, options?: TokenBuilderOptions): TokenVocabulary {
+        const reachableRules = stream(GrammarUtils.getAllReachableRules(grammar, false));
+        const terminalTokens: TokenType[] = this.buildTerminalTokens(reachableRules);
+        const intermediate: TokenType[] = this.buildKeywordTokens(reachableRules, terminalTokens, options);
+        const id = terminalTokens.find(e => e.name === 'ID')!;
+
+        const [left, right] = this.partition(intermediate, t => /[a-zA-Z]/.test(t.name));
+        for (const keywordToken of left) {
+            keywordToken.CATEGORIES = [id];
+        }
+        const tokens = left.concat(right);
 
         terminalTokens.forEach(terminalToken => {
             const pattern = terminalToken.PATTERN;
@@ -36,6 +55,102 @@ export class PliTokenBuilder extends DefaultTokenBuilder {
         });
         const execFragment = tokens.find(e => e.name === 'ExecFragment')!;
         execFragment.START_CHARS_HINT = ['S', 'C'];
-        return tokens;
+        return tokens.map(r => this.makeSticky(r));
+    }
+    makeSticky(tokenType: TokenType): TokenType {
+        if(isRegExp(tokenType.PATTERN)) {
+            return {
+                ...tokenType,
+                PATTERN: new RegExp(tokenType.PATTERN.source, `${tokenType.PATTERN.flags}y`)
+            }
+        }
+        return tokenType;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    flushLexingReport(text: string): LexingReport {
+        return { diagnostics: this.popDiagnostics() };
+    }
+
+    protected popDiagnostics(): LexingDiagnostic[] {
+        const diagnostics = [...this.diagnostics];
+        this.diagnostics = [];
+        return diagnostics;
+    }
+
+    protected buildTerminalTokens(rules: Stream<GrammarAST.AbstractRule>): TokenType[] {
+        return rules.filter(GrammarAST.isTerminalRule).filter(e => !e.fragment)
+            .map(terminal => this.buildTerminalToken(terminal)).toArray();
+    }
+
+    protected buildTerminalToken(terminal: GrammarAST.TerminalRule): TokenType {
+        const regex = GrammarUtils.terminalRegex(terminal);
+        const pattern = this.requiresCustomPattern(regex) ? this.regexPatternFunction(regex) : regex;
+        const tokenType: TokenType = {
+            name: terminal.name,
+            PATTERN: pattern,
+            LINE_BREAKS: true
+        };
+        if (terminal.hidden) {
+            // Only skip tokens that are able to accept whitespace
+            tokenType.GROUP = RegExpUtils.isWhitespace(regex) ? Lexer.SKIPPED : 'hidden';
+        }
+        return tokenType;
+    }
+
+    protected requiresCustomPattern(regex: RegExp): boolean {
+        if (regex.flags.includes('u') || regex.flags.includes('s')) {
+            // Unicode and dotall regexes are not supported by Chevrotain.
+            return true;
+        } else if (regex.source.includes('?<=') || regex.source.includes('?<!')) {
+            // Negative and positive lookbehind are not supported by Chevrotain yet.
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    protected regexPatternFunction(regex: RegExp): CustomPatternMatcherFunc {
+        const stickyRegex = new RegExp(regex, regex.flags + 'y');
+        return (text, offset) => {
+            stickyRegex.lastIndex = offset;
+            const execResult = stickyRegex.exec(text);
+            return execResult;
+        };
+    }
+
+    protected buildKeywordTokens(rules: Stream<GrammarAST.AbstractRule>, terminalTokens: TokenType[], options?: TokenBuilderOptions): TokenType[] {
+        return rules
+            // We filter by parser rules, since keywords in terminal rules get transformed into regex and are not actual tokens
+            .filter(GrammarAST.isParserRule)
+            .flatMap(rule => AstUtils.streamAllContents(rule).filter(GrammarAST.isKeyword))
+            .distinct(e => e.value).toArray()
+            // Sort keywords by descending length
+            .sort((a, b) => b.value.length - a.value.length)
+            .map(keyword => this.buildKeywordToken(keyword, terminalTokens, Boolean(options?.caseInsensitive)));
+    }
+
+    protected buildKeywordToken(keyword: GrammarAST.Keyword, terminalTokens: TokenType[], caseInsensitive: boolean): TokenType {
+        return {
+            name: keyword.value,
+            PATTERN: this.buildKeywordPattern(keyword, caseInsensitive),
+            LONGER_ALT: this.findLongerAlt(keyword, terminalTokens)
+        };
+    }
+
+    protected buildKeywordPattern(keyword: GrammarAST.Keyword, caseInsensitive: boolean): TokenPattern {
+        return caseInsensitive ?
+            new RegExp(RegExpUtils.getCaseInsensitivePattern(keyword.value)) :
+            keyword.value;
+    }
+
+    protected findLongerAlt(keyword: GrammarAST.Keyword, terminalTokens: TokenType[]): TokenType[] {
+        return terminalTokens.reduce((longerAlts: TokenType[], token) => {
+            const pattern = token?.PATTERN as RegExp;
+            if (pattern?.source && RegExpUtils.partialMatches('^' + pattern.source + '$', keyword.value)) {
+                longerAlts.push(token);
+            }
+            return longerAlts;
+        }, []);
     }
 }

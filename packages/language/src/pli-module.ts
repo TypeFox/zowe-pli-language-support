@@ -26,6 +26,7 @@ import { PliDocumentationProvider } from './documentation.ts/pli-documentation-p
 import { PliCompletionProvider } from './lsp/pli-completion-provider.js';
 import { PliIndexManager } from './workspace/pli-index-manager.js';
 import { PliWorkspaceManager } from './workspace/pli-workspace-manager.js';
+import { MarginsProcessor, PliMarginsProcessor } from './parser/pli-margins-processor.js';
 
 /**
  * Declaration of custom services - add your own service classes here.
@@ -33,6 +34,9 @@ import { PliWorkspaceManager } from './workspace/pli-workspace-manager.js';
 export type Pl1AddedServices = {
     validation: {
         Pl1Validator: Pl1Validator
+    },
+    parser: {
+        MarginsProcessor: MarginsProcessor
     }
 }
 
@@ -56,8 +60,9 @@ export const PliModule: Module<Pl1Services, PartialLangiumServices & Pl1AddedSer
         DocumentValidator: services => new PliDocumentValidator(services)
     },
     parser: {
+        MarginsProcessor: () => new PliMarginsProcessor(),
         Lexer: services => new Pl1Lexer(services),
-        TokenBuilder: () => new PliTokenBuilder()
+        TokenBuilder: () => new PliTokenBuilder(),
     },
     references: {
         ScopeComputation: services => new PliScopeComputation(services),
