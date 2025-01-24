@@ -36,14 +36,7 @@ export class PliTokenBuilder implements TokenBuilder {
     buildTokens(grammar: Grammar, options?: TokenBuilderOptions): TokenVocabulary {
         const reachableRules = stream(GrammarUtils.getAllReachableRules(grammar, false));
         const terminalTokens: TokenType[] = this.buildTerminalTokens(reachableRules);
-        const intermediate: TokenType[] = this.buildKeywordTokens(reachableRules, terminalTokens, options);
-        const id = terminalTokens.find(e => e.name === 'ID')!;
-
-        const [left, right] = this.partition(intermediate, t => /[a-zA-Z]/.test(t.name));
-        for (const keywordToken of left) {
-            keywordToken.CATEGORIES = [id];
-        }
-        const tokens = left.concat(right);
+        const tokens: TokenType[] = this.buildKeywordTokens(reachableRules, terminalTokens, options);
 
         terminalTokens.forEach(terminalToken => {
             const pattern = terminalToken.PATTERN;
