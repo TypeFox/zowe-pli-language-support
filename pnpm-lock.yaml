@@ -42,8 +42,8 @@ importers:
         specifier: ^11.0.3
         version: 11.0.3
       langium:
-        specifier: ~3.2.0
-        version: 3.2.0
+        specifier: 3.3.1
+        version: 3.3.1
       vscode-languageserver:
         specifier: ~9.0.1
         version: 9.0.1
@@ -52,8 +52,8 @@ importers:
         version: 3.17.5
     devDependencies:
       langium-cli:
-        specifier: ~3.2.0
-        version: 3.2.0
+        specifier: ~3.3.0
+        version: 3.3.0
 
   packages/playground:
     dependencies:
@@ -78,12 +78,9 @@ importers:
       '@codingame/monaco-vscode-views-service-override':
         specifier: ~11.1.2
         version: 11.1.2
-      '@typefox/monaco-editor-react':
-        specifier: ~6.1.0
-        version: 6.1.0(d3sw5lristatompllg7e6ykphm)
       langium:
-        specifier: 3.2.0
-        version: 3.2.0
+        specifier: 3.3.1
+        version: 3.3.1
       lz-string:
         specifier: ~1.5.0
         version: 1.5.0
@@ -128,8 +125,8 @@ importers:
   packages/vscode-extension:
     dependencies:
       langium:
-        specifier: ~3.2.0
-        version: 3.2.0
+        specifier: 3.3.1
+        version: 3.3.1
       pli-language:
         specifier: workspace:*
         version: link:../language
@@ -150,8 +147,8 @@ importers:
         specifier: ~8.2.1
         version: 8.2.2
       esbuild:
-        specifier: ~0.21.5
-        version: 0.21.5
+        specifier: ~0.24.0
+        version: 0.24.2
 
 packages:
 
@@ -867,13 +864,6 @@ packages:
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
-
-  '@typefox/monaco-editor-react@6.1.0':
-    resolution: {integrity: sha512-/EhTUl+YxJZ3vWDZ1ANJDwIS7DIPGosPAvyHLC/UgU9zpucfT7C8xBsAhOnXDUIzSmJBGEhews2YU6jnIzA5nA==}
-    engines: {node: '>=18.19.0', npm: '>=10.2.3'}
-    peerDependencies:
-      monaco-editor-wrapper: ~6.1.0
-      react: '>=18.0.0 || <20.0.0'
 
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
@@ -1714,20 +1704,20 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
-  langium-cli@3.2.0:
-    resolution: {integrity: sha512-4JWeCMuTHyFO+GCnOVT8+jygdob4KnU0uh/26cMxgZ1FlenAk8zrOnrXbuUzIm0FAIetCqrR6GUXqeko+Vg5og==}
+  langium-cli@3.3.0:
+    resolution: {integrity: sha512-QWvlOYdLbso8/lv6Ma+SBtvMN9k70JrplLx6VSIcV7gJNDTXeS+tjwC/f6T0aco1fg8uLL8GiAcaMovd1FnneA==}
     engines: {node: '>=16.0.0'}
     hasBin: true
 
-  langium-railroad@3.2.0:
-    resolution: {integrity: sha512-8wJqRid1udSH9PKo8AkRrJCUNHQ6Xu9tGi+//bLdHGDdlK9gpps1AwO71ufE864/so77K4ZmqBuLnBnxPcGs/Q==}
-
-  langium@3.2.0:
-    resolution: {integrity: sha512-HxAPgCVC7X+dCN99QKlZMEoaLW4s/mt0IImYrP6ooEBOMh8lJYdFNNSpJ5NIOE+WFwQd3xa2phTJDmJhOWVR7A==}
-    engines: {node: '>=16.0.0'}
+  langium-railroad@3.3.0:
+    resolution: {integrity: sha512-x56CU0KnLoqYLkHEPDJjFoekFoCVbbZbmHduldiXjKD8owt6t5aqgWfg31OeMeR+7XgONZTtmsO76yl6GvEkzQ==}
 
   langium@3.2.1:
     resolution: {integrity: sha512-Dnew3MLir8lzrSBFbtjBh/thxu0eU9EqBE58sbi6lBw/FHarYkbuZ8N9azMb0cWqkfCbV6J6EMnUOOhX4ZRxhA==}
+    engines: {node: '>=16.0.0'}
+
+  langium@3.3.1:
+    resolution: {integrity: sha512-QJv/h939gDpvT+9SiLVlY7tZC3xB2qK57v0J04Sh9wpMb6MP1q8gB21L3WIo8T5P1MSMg3Ep14L7KkDCFG3y4w==}
     engines: {node: '>=16.0.0'}
 
   leven@3.1.0:
@@ -2484,10 +2474,6 @@ packages:
 
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
-
-  react@19.0.0:
-    resolution: {integrity: sha512-V8AVnmPIICiWpGfm6GLzCR/W5FXLchHop40W4nXBmdlEceh16rCN8O8LNWm5bh5XUX91fh7KpA+W0TgMKmgTpQ==}
-    engines: {node: '>=0.10.0'}
 
   read@1.0.7:
     resolution: {integrity: sha512-rSOKNYUmaxy0om1BNjMN4ezNT6VKK+2xF4GBhc81mkH7L60i6dp8qPYrkndNLT3QPphoII3maL9PVC9XmhHwVQ==}
@@ -3718,164 +3704,6 @@ snapshots:
 
   '@sinclair/typebox@0.27.8': {}
 
-  '@typefox/monaco-editor-react@6.1.0(d3sw5lristatompllg7e6ykphm)':
-    dependencies:
-      monaco-editor: '@codingame/monaco-vscode-editor-api@11.1.2'
-      monaco-editor-wrapper: 6.1.0(monaco-languageclient@9.1.0(5ppedroh2i5jkkroustklvooxq))(vscode-ws-jsonrpc@3.4.0)
-      monaco-languageclient: 9.1.0(5ppedroh2i5jkkroustklvooxq)
-      react: 19.0.0
-      vscode: '@codingame/monaco-vscode-api@11.1.2'
-      vscode-ws-jsonrpc: 3.4.0
-    transitivePeerDependencies:
-      - '@codingame/monaco-vscode-accessibility-service-override'
-      - '@codingame/monaco-vscode-all-default-extensions'
-      - '@codingame/monaco-vscode-all-language-default-extensions'
-      - '@codingame/monaco-vscode-all-language-feature-default-extensions'
-      - '@codingame/monaco-vscode-api'
-      - '@codingame/monaco-vscode-base-service-override'
-      - '@codingame/monaco-vscode-bat-default-extension'
-      - '@codingame/monaco-vscode-chat-extensions-notebook-common'
-      - '@codingame/monaco-vscode-chat-extensions-notebook-task-terminal-testing-common'
-      - '@codingame/monaco-vscode-chat-service-override'
-      - '@codingame/monaco-vscode-clojure-default-extension'
-      - '@codingame/monaco-vscode-coffeescript-default-extension'
-      - '@codingame/monaco-vscode-comments-extensions-common'
-      - '@codingame/monaco-vscode-configuration-editing-default-extension'
-      - '@codingame/monaco-vscode-configuration-service-override'
-      - '@codingame/monaco-vscode-cpp-default-extension'
-      - '@codingame/monaco-vscode-csharp-default-extension'
-      - '@codingame/monaco-vscode-css-default-extension'
-      - '@codingame/monaco-vscode-css-language-features-default-extension'
-      - '@codingame/monaco-vscode-dart-default-extension'
-      - '@codingame/monaco-vscode-debug-service-override'
-      - '@codingame/monaco-vscode-dialogs-service-override'
-      - '@codingame/monaco-vscode-diff-default-extension'
-      - '@codingame/monaco-vscode-docker-default-extension'
-      - '@codingame/monaco-vscode-editor-api'
-      - '@codingame/monaco-vscode-editor-service-override'
-      - '@codingame/monaco-vscode-emmet-default-extension'
-      - '@codingame/monaco-vscode-environment-service-override'
-      - '@codingame/monaco-vscode-explorer-service-override'
-      - '@codingame/monaco-vscode-extension-editing-default-extension'
-      - '@codingame/monaco-vscode-extensions-service-override'
-      - '@codingame/monaco-vscode-files-service-override'
-      - '@codingame/monaco-vscode-fsharp-default-extension'
-      - '@codingame/monaco-vscode-git-base-default-extension'
-      - '@codingame/monaco-vscode-github-authentication-default-extension'
-      - '@codingame/monaco-vscode-go-default-extension'
-      - '@codingame/monaco-vscode-groovy-default-extension'
-      - '@codingame/monaco-vscode-handlebars-default-extension'
-      - '@codingame/monaco-vscode-hlsl-default-extension'
-      - '@codingame/monaco-vscode-host-service-override'
-      - '@codingame/monaco-vscode-html-default-extension'
-      - '@codingame/monaco-vscode-html-language-features-default-extension'
-      - '@codingame/monaco-vscode-ini-default-extension'
-      - '@codingame/monaco-vscode-ipynb-default-extension'
-      - '@codingame/monaco-vscode-java-default-extension'
-      - '@codingame/monaco-vscode-javascript-default-extension'
-      - '@codingame/monaco-vscode-json-default-extension'
-      - '@codingame/monaco-vscode-json-language-features-default-extension'
-      - '@codingame/monaco-vscode-julia-default-extension'
-      - '@codingame/monaco-vscode-keybindings-service-override'
-      - '@codingame/monaco-vscode-language-pack-cs'
-      - '@codingame/monaco-vscode-language-pack-de'
-      - '@codingame/monaco-vscode-language-pack-es'
-      - '@codingame/monaco-vscode-language-pack-fr'
-      - '@codingame/monaco-vscode-language-pack-it'
-      - '@codingame/monaco-vscode-language-pack-ja'
-      - '@codingame/monaco-vscode-language-pack-ko'
-      - '@codingame/monaco-vscode-language-pack-pl'
-      - '@codingame/monaco-vscode-language-pack-pt-br'
-      - '@codingame/monaco-vscode-language-pack-qps-ploc'
-      - '@codingame/monaco-vscode-language-pack-ru'
-      - '@codingame/monaco-vscode-language-pack-tr'
-      - '@codingame/monaco-vscode-language-pack-zh-hans'
-      - '@codingame/monaco-vscode-language-pack-zh-hant'
-      - '@codingame/monaco-vscode-languages-service-override'
-      - '@codingame/monaco-vscode-latex-default-extension'
-      - '@codingame/monaco-vscode-layout-service-override'
-      - '@codingame/monaco-vscode-less-default-extension'
-      - '@codingame/monaco-vscode-lifecycle-service-override'
-      - '@codingame/monaco-vscode-localization-service-override'
-      - '@codingame/monaco-vscode-log-default-extension'
-      - '@codingame/monaco-vscode-log-service-override'
-      - '@codingame/monaco-vscode-lua-default-extension'
-      - '@codingame/monaco-vscode-make-default-extension'
-      - '@codingame/monaco-vscode-markdown-basics-default-extension'
-      - '@codingame/monaco-vscode-markdown-language-features-default-extension'
-      - '@codingame/monaco-vscode-markdown-math-default-extension'
-      - '@codingame/monaco-vscode-markers-service-override'
-      - '@codingame/monaco-vscode-media-preview-default-extension'
-      - '@codingame/monaco-vscode-merge-conflict-default-extension'
-      - '@codingame/monaco-vscode-microsoft-authentication-default-extension'
-      - '@codingame/monaco-vscode-model-service-override'
-      - '@codingame/monaco-vscode-monarch-service-override'
-      - '@codingame/monaco-vscode-notebook-renderers-default-extension'
-      - '@codingame/monaco-vscode-notebook-service-override'
-      - '@codingame/monaco-vscode-notifications-service-override'
-      - '@codingame/monaco-vscode-npm-default-extension'
-      - '@codingame/monaco-vscode-objective-c-default-extension'
-      - '@codingame/monaco-vscode-outline-service-override'
-      - '@codingame/monaco-vscode-output-service-override'
-      - '@codingame/monaco-vscode-perl-default-extension'
-      - '@codingame/monaco-vscode-php-default-extension'
-      - '@codingame/monaco-vscode-powershell-default-extension'
-      - '@codingame/monaco-vscode-preferences-service-override'
-      - '@codingame/monaco-vscode-pug-default-extension'
-      - '@codingame/monaco-vscode-python-default-extension'
-      - '@codingame/monaco-vscode-quickaccess-service-override'
-      - '@codingame/monaco-vscode-r-default-extension'
-      - '@codingame/monaco-vscode-razor-default-extension'
-      - '@codingame/monaco-vscode-references-view-default-extension'
-      - '@codingame/monaco-vscode-restructuredtext-default-extension'
-      - '@codingame/monaco-vscode-rollup-extension-directory-plugin'
-      - '@codingame/monaco-vscode-rollup-vsix-plugin'
-      - '@codingame/monaco-vscode-ruby-default-extension'
-      - '@codingame/monaco-vscode-rust-default-extension'
-      - '@codingame/monaco-vscode-scss-default-extension'
-      - '@codingame/monaco-vscode-search-result-default-extension'
-      - '@codingame/monaco-vscode-search-service-override'
-      - '@codingame/monaco-vscode-server'
-      - '@codingame/monaco-vscode-shaderlab-default-extension'
-      - '@codingame/monaco-vscode-share-service-override'
-      - '@codingame/monaco-vscode-shellscript-default-extension'
-      - '@codingame/monaco-vscode-simple-browser-default-extension'
-      - '@codingame/monaco-vscode-snippets-service-override'
-      - '@codingame/monaco-vscode-sql-default-extension'
-      - '@codingame/monaco-vscode-standalone-css-language-features'
-      - '@codingame/monaco-vscode-standalone-html-language-features'
-      - '@codingame/monaco-vscode-standalone-json-language-features'
-      - '@codingame/monaco-vscode-standalone-languages'
-      - '@codingame/monaco-vscode-standalone-typescript-language-features'
-      - '@codingame/monaco-vscode-storage-service-override'
-      - '@codingame/monaco-vscode-swift-default-extension'
-      - '@codingame/monaco-vscode-task-service-override'
-      - '@codingame/monaco-vscode-terminal-service-override'
-      - '@codingame/monaco-vscode-testing-service-override'
-      - '@codingame/monaco-vscode-textmate-service-override'
-      - '@codingame/monaco-vscode-theme-abyss-default-extension'
-      - '@codingame/monaco-vscode-theme-defaults-default-extension'
-      - '@codingame/monaco-vscode-theme-kimbie-dark-default-extension'
-      - '@codingame/monaco-vscode-theme-monokai-default-extension'
-      - '@codingame/monaco-vscode-theme-monokai-dimmed-default-extension'
-      - '@codingame/monaco-vscode-theme-quietlight-default-extension'
-      - '@codingame/monaco-vscode-theme-red-default-extension'
-      - '@codingame/monaco-vscode-theme-service-override'
-      - '@codingame/monaco-vscode-theme-seti-default-extension'
-      - '@codingame/monaco-vscode-theme-solarized-dark-default-extension'
-      - '@codingame/monaco-vscode-theme-solarized-light-default-extension'
-      - '@codingame/monaco-vscode-theme-tomorrow-night-blue-default-extension'
-      - '@codingame/monaco-vscode-timeline-service-override'
-      - '@codingame/monaco-vscode-typescript-basics-default-extension'
-      - '@codingame/monaco-vscode-typescript-language-features-default-extens'
-      - '@codingame/monaco-vscode-update-service-override'
-      - '@codingame/monaco-vscode-vb-default-extension'
-      - '@codingame/monaco-vscode-views-service-override'
-      - '@codingame/monaco-vscode-welcome-service-override'
-      - '@codingame/monaco-vscode-workbench-service-override'
-      - '@codingame/monaco-vscode-xml-default-extension'
-      - '@codingame/monaco-vscode-yaml-default-extension'
-
   '@types/estree@1.0.6': {}
 
   '@types/node@18.19.70':
@@ -4883,22 +4711,22 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  langium-cli@3.2.0:
+  langium-cli@3.3.0:
     dependencies:
       chalk: 5.3.0
       commander: 11.0.0
       fs-extra: 11.1.1
       jsonschema: 1.4.1
-      langium: 3.2.0
-      langium-railroad: 3.2.0
+      langium: 3.3.1
+      langium-railroad: 3.3.0
       lodash: 4.17.21
 
-  langium-railroad@3.2.0:
+  langium-railroad@3.3.0:
     dependencies:
-      langium: 3.2.1
+      langium: 3.3.1
       railroad-diagrams: 1.0.0
 
-  langium@3.2.0:
+  langium@3.2.1:
     dependencies:
       chevrotain: 11.0.3
       chevrotain-allstar: 0.3.1(chevrotain@11.0.3)
@@ -4906,7 +4734,7 @@ snapshots:
       vscode-languageserver-textdocument: 1.0.12
       vscode-uri: 3.0.8
 
-  langium@3.2.1:
+  langium@3.3.1:
     dependencies:
       chevrotain: 11.0.3
       chevrotain-allstar: 0.3.1(chevrotain@11.0.3)
@@ -5307,8 +5135,6 @@ snapshots:
     optional: true
 
   react-is@18.3.1: {}
-
-  react@19.0.0: {}
 
   read@1.0.7:
     dependencies:

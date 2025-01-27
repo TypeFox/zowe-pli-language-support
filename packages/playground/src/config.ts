@@ -14,8 +14,7 @@ import { useWorkerFactory } from 'monaco-editor-wrapper/workerFactory';
 import getKeybindingsServiceOverride from '@codingame/monaco-vscode-keybindings-service-override';
 import getMarkersServiceOverride from '@codingame/monaco-vscode-markers-service-override';
 import { BrowserMessageReader, BrowserMessageWriter } from 'vscode-languageclient/browser.js';
-import { LogLevel } from 'vscode/services';
-import { WrapperConfig } from 'monaco-editor-wrapper';
+import type { WrapperConfig } from 'monaco-editor-wrapper';
 import languageConfig from '../../vscode-extension/language-configuration.json?raw';
 import textmateGrammar from '../../vscode-extension/syntaxes/pli.merged.json?raw';
 import text from '../../../code_samples/RXGIM.pli?raw';
@@ -92,7 +91,7 @@ export const setupClient = async (content?: string): Promise<WrapperConfig> => {
     return {
         $type: 'extended',
         htmlContainer: document.getElementById('vscode-views-root')!,
-        logLevel: LogLevel.Debug,
+        logLevel: 3,
         vscodeApiConfig: {
             serviceOverrides: {
                 ...getKeybindingsServiceOverride(),
