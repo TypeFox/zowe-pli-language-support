@@ -74,47 +74,96 @@ describe("Linking tests", () => {
     });
 
     describe("Unstructured tests", async () => {
-        describe("Label tests", async () => {
+        
+        // https://github.com/zowe/zowe-pli-language-support/issues/29#issuecomment-2623842079
+        describe("Nested procedure label tests", async () => {
             const text = `
- <|OUTER|>: procedure options (main);
-    <|INNER|>: procedure;
-        call <|>OUTER;
-        OUTER: procedure;
-            call <|>INNER;
-            INNER: procedure;
-                call <|>OUTER;
+ <|OUTER|>: procedure options (main); // outer0
+    <|INNER|>: procedure;             // inner0
+        call <|>OUTER;                // callOuter0
+        call <|>INNER;                // callInner0
+
+        <|OUTER|>: procedure;         // outer1
+            call <|>OUTER;            // callOuter1
+            call <|>INNER;            // callInner1
+
+            <|INNER|>: procedure;     // inner1
+                call <|>OUTER;        // callOuter2
+                call <|>INNER;        // callInner2
             END INNER;
+
+            call <|>OUTER;            // callOuter3
+            call <|>INNER;            // callInner3
         END OUTER;
+
+        call <|>OUTER;                // callOuter4
+        call <|>INNER;                // callInner4
     END INNER;
+
+    call <|>OUTER;                    // callOuter5
+    call <|>INNER;                    // callInner5
  end OUTER;
+
+ call <|>OUTER;                       // callOuter6
         `;
+            const procedures = {
+                outer0: 0,
+                inner0: 1,
+                outer1: 2,
+                inner1: 3,
+            }
 
-            test("Must find outer procedure label", async () => {
-                await gotoDefinition({
-                    text: text,
-                    index: 0,
-                    rangeIndex: 0,
-                });
-            });
+            const calls = {
+                callOuter0: 0,
+                callInner0: 1,
+                callOuter1: 2,
+                callInner1: 3,
+                callOuter2: 4,
+                callInner2: 5,
+                callOuter3: 6,
+                callInner3: 7,
+                callOuter4: 8,
+                callInner4: 9,
+                callOuter5: 10,
+                callInner5: 11,
+                callOuter6: 12,
+            }
 
-            test("Must find outer procecure label in nested repeated procedure name", async () => {
-                await gotoDefinition({
-                    text: text,
-                    index: 1,
-                    rangeIndex: 1,
-                });
-            });
+            const links = {
+                [procedures.outer0]: [
+                    calls.callOuter0,
+                    calls.callOuter5,
+                    calls.callOuter6,
+                ],
+                [procedures.inner0]: [
+                    calls.callInner0,
+                    calls.callInner1,
+                    calls.callInner4,
+                    calls.callInner5,
+                ],
+                [procedures.outer1]: [
+                    calls.callOuter1,
+                    calls.callOuter2,
+                    calls.callOuter3,
+                    calls.callOuter4,
+                ],
+                [procedures.inner1]: [
+                    calls.callInner2,
+                    calls.callInner3,
+                ]
+            }
 
-            /**
-             * Didrik: I'm unsure what the expected behavior on the mainframe is here.
-             */
-            test("Must find most outer procedure label in nested identical procedure names (unsure)", async () => {
-                await gotoDefinition({
-                    text: text,
-                    index: 2,
-                    rangeIndex: 0,
-                });
-            });
+            for(const [procedure, calls] of Object.entries(links)) {
+                for(const call of calls) {
+                    test("Must find link correct procedure label", async () => {
+                        await gotoDefinition({
+                            text: text,
+                            index: call,
+                            rangeIndex: +procedure
+                        });
+                    });
+                }
+            }
         });
 
         describe("Declaration tests", async () => {
